@@ -152,9 +152,6 @@ Ces critères sont évalués — chaque décision de design doit les servir :
 
 ### 5. Feedback utilisateur
 
-- Chaque action doit avoir une confirmation visuelle
-- Messages d’erreur explicites sur les formulaires
-- → Appliquer : Toast après soumission, badge mis à jour après changement de statut, états de loading
 
 ### 6. Consistance
 
