@@ -71,10 +71,7 @@ Lucide React (icônes uniquement)
 
 **Interdictions** :
 
-- ❌ Ne pas installer de bibliothèque de composants (MUI, Shadcn, Chakra, Ant Design…)
-- ❌ Ne pas installer de bibliothèque de graphiques (Chart.js, Recharts…) — utiliser des divs CSS
-- ❌ Ne pas utiliser `axios` — utiliser `fetch` ou rien (tout est simulé)
-- ❌ Ne pas installer de bibliothèque d’animations (Framer Motion, GSAP…) — utiliser Tailwind uniquement
+
 - ❌ Ne pas toucher à `vite.config.ts` ni à `tsconfig.json` sans raison explicite
 
 -----
