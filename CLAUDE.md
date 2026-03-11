@@ -12,7 +12,7 @@ Ce projet est réalisé dans le cadre du **CC1 de l’UE Interface Homme-Machine
 - **Université** : Université de Strasbourg — L3 Informatique
 - **Enseignant** : Prof. Hayk Zarikian
 - **Groupe** : 8A
-- **Rendu** : 09–15 Mars 2026 sur Moodle
+- **Rendu** : 15 Mars 2026 sur Moodle
 - **Objectif** : Produire un mockup interactif déployé qui sera intégré (captures + lien) dans le PDF du cahier des charges fonctionnel
 
 -----
