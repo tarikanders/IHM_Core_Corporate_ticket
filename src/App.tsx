@@ -1,11 +1,15 @@
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import LoginPage from './pages/LoginPage'
+import NotFoundPage from './pages/NotFoundPage'
 import ArtistDashboard from './pages/ArtistDashboard'
 import NewTicketPage from './pages/NewTicketPage'
 import TicketTrackingPage from './pages/TicketTrackingPage'
 import AgentDashboard from './pages/AgentDashboard'
 import AgentTicketPage from './pages/AgentTicketPage'
+import MyReleasesPage from './pages/artist/MyReleasesPage'
+import TicketConfirmationPage from './pages/artist/TicketConfirmationPage'
+import StatsPage from './pages/agent/StatsPage'
 
 const router = createBrowserRouter([
   { path: '/', element: <LoginPage /> },
@@ -18,6 +22,8 @@ const router = createBrowserRouter([
       { path: 'new-ticket', element: <NewTicketPage /> },
       { path: 'tickets', element: <TicketTrackingPage /> },
       { path: 'tickets/:id', element: <TicketTrackingPage /> },
+      { path: 'tickets/confirm', element: <TicketConfirmationPage /> },
+      { path: 'releases', element: <MyReleasesPage /> },
     ]
   },
   {
@@ -27,9 +33,10 @@ const router = createBrowserRouter([
       { index: true, element: <Navigate to="dashboard" /> },
       { path: 'dashboard', element: <AgentDashboard /> },
       { path: 'tickets/:id', element: <AgentTicketPage /> },
+      { path: 'stats', element: <StatsPage /> },
     ]
   },
-  { path: '*', element: <Navigate to="/" /> }
+  { path: '*', element: <NotFoundPage /> }
 ])
 
 export default function App() {

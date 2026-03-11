@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, TicketIcon, UserCheck, Star } from 'lucide-react'
 import { useTicketStore } from '../store/useTicketStore'
@@ -9,20 +8,15 @@ import type { Category } from '../types/ticket'
 
 const categoryColors: Record<Category, string> = {
   distribution: '#00BCD4',
-  royalties: '#00E676',
-  metadata: '#7B5EA7',
-  account: '#E040FB',
+  royalties:    '#00E676',
+  metadata:     '#7B5EA7',
+  account:      '#E040FB',
 }
 
-const priorityOrder: Record<string, number> = {
-  critical: 0,
-  high: 1,
-  medium: 2,
-  low: 3,
-}
+const priorityOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
 
-function getArtistName(artistId: string): string {
-  return mockUsers.find((u) => u.id === artistId)?.name || artistId
+function getArtistById(artistId: string) {
+  return mockUsers.find((u) => u.id === artistId)
 }
 
 function getAgentName(agentId?: string): string {
@@ -34,15 +28,14 @@ export default function AgentDashboard() {
   const navigate = useNavigate()
   const { tickets, currentUser } = useTicketStore()
 
-  const openTickets = tickets.filter((t) => t.status !== 'closed')
+  const openTickets    = tickets.filter((t) => t.status !== 'closed')
   const criticalTickets = tickets.filter((t) => t.priority === 'critical' && t.status !== 'closed')
-  const assignedToMe = tickets.filter((t) => t.assignedTo === currentUser?.id && t.status !== 'closed')
+  const assignedToMe   = tickets.filter((t) => t.assignedTo === currentUser?.id && t.status !== 'closed')
 
   const sortedTickets = [...openTickets].sort(
     (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
   )
 
-  // Category breakdown
   const categories: Category[] = ['distribution', 'royalties', 'metadata', 'account']
   const categoryBreakdown = categories.map((cat) => ({
     category: cat,
@@ -54,128 +47,155 @@ export default function AgentDashboard() {
 
   const categoryLabels: Record<Category, string> = {
     distribution: 'Distribution',
-    royalties: 'Royalties',
-    metadata: 'Métadonnées',
-    account: 'Compte',
+    royalties:    'Royalties',
+    metadata:     'Métadonnées',
+    account:      'Compte',
   }
 
+  const now = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+
   return (
-    <div className="min-h-screen bg-bg p-6">
+    <div className="min-h-screen bg-bg p-6 animate-fade-in">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Tableau de bord — Agent</h1>
-        <p className="text-lgray text-sm mt-1">Bienvenue, {currentUser?.name}</p>
+        <h1 className="text-3xl font-bold text-white">Tableau de bord — Agent</h1>
+        <p className="text-lgray text-sm mt-1 capitalize">{now}</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-slide-up">
         <StatCard
           value={openTickets.length}
           label="Tickets ouverts"
-          color="#7B5EA7"
-          icon={<TicketIcon size={24} />}
+          gradient="from-purple to-purple-light"
+          iconBg="bg-purple/15"
+          icon={<TicketIcon size={20} className="text-purple" />}
         />
         <StatCard
           value={criticalTickets.length}
           label="Critiques"
-          color="#FF1744"
-          icon={<AlertTriangle size={24} />}
+          gradient="from-red to-orange"
+          iconBg="bg-red/15"
+          icon={<AlertTriangle size={20} className="text-red" />}
+          pulse={criticalTickets.length > 0}
         />
         <StatCard
           value={assignedToMe.length}
           label="Assignés à moi"
-          color="#00BCD4"
-          icon={<UserCheck size={24} />}
+          gradient="from-teal to-green"
+          iconBg="bg-teal/15"
+          icon={<UserCheck size={20} className="text-teal" />}
         />
         <StatCard
           value="4.7★"
           label="Satisfaction"
-          color="#00E676"
-          icon={<Star size={24} />}
+          gradient="from-green to-teal"
+          iconBg="bg-green/15"
+          icon={<Star size={20} className="text-green" />}
         />
       </div>
 
       {/* Category breakdown */}
-      <div className="bg-card border border-dgray/30 rounded-xl p-5 mb-6">
+      <div className="bg-card border border-border rounded-2xl p-5 mb-6 animate-slide-up">
         <h2 className="text-sm font-semibold text-white mb-4">Répartition par catégorie</h2>
         <div className="flex flex-col gap-3">
           {categoryBreakdown.map(({ category, count, pct }) => (
-            <div key={category} className="flex items-center gap-3">
-              <span className="text-xs text-lgray w-28 flex-shrink-0">{categoryLabels[category]}</span>
-              <div className="flex-1 bg-dgray/40 rounded-full h-2">
+            <div key={category} className="flex items-center gap-3 mb-3">
+              <span className="text-lgray text-sm w-28 flex-shrink-0">{categoryLabels[category]}</span>
+              <div className="flex-1 bg-dgray rounded-full h-3">
                 <div
-                  className="h-2 rounded-full transition-all"
+                  className="h-3 rounded-full transition-all duration-500"
                   style={{ width: `${pct}%`, backgroundColor: categoryColors[category] }}
                 />
               </div>
-              <span className="text-xs text-lgray w-8 text-right">{count}</span>
+              <span className="text-white text-sm font-medium w-6 text-right flex-shrink-0">{count}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Tickets table */}
-      <div className="bg-card border border-dgray/30 rounded-xl overflow-hidden mb-6">
-        <div className="p-5 border-b border-dgray/30">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden mb-6 animate-slide-up">
+        <div className="bg-surface px-5 py-4 border-b border-border">
           <h2 className="text-base font-semibold text-white">
             Tous les tickets actifs
             <span className="text-xs text-muted ml-2 font-normal">({sortedTickets.length})</span>
           </h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[700px]">
             <thead>
-              <tr className="border-b border-dgray/30">
-                <th className="text-left text-xs text-muted px-4 py-3 font-medium">#</th>
-                <th className="text-left text-xs text-muted px-4 py-3 font-medium">Artiste</th>
-                <th className="text-left text-xs text-muted px-4 py-3 font-medium">Catégorie</th>
-                <th className="text-left text-xs text-muted px-4 py-3 font-medium">Sujet</th>
-                <th className="text-left text-xs text-muted px-4 py-3 font-medium">Priorité</th>
-                <th className="text-left text-xs text-muted px-4 py-3 font-medium">Statut</th>
-                <th className="text-left text-xs text-muted px-4 py-3 font-medium">Assigné à</th>
-                <th className="text-left text-xs text-muted px-4 py-3 font-medium">Action</th>
+              <tr className="border-b border-border bg-surface/50">
+                <th className="text-left text-xs font-bold text-muted uppercase tracking-wider px-4 py-3">#</th>
+                <th className="text-left text-xs font-bold text-muted uppercase tracking-wider px-4 py-3">Artiste</th>
+                <th className="text-left text-xs font-bold text-muted uppercase tracking-wider px-4 py-3">Catégorie</th>
+                <th className="text-left text-xs font-bold text-muted uppercase tracking-wider px-4 py-3">Sujet</th>
+                <th className="text-left text-xs font-bold text-muted uppercase tracking-wider px-4 py-3">Priorité</th>
+                <th className="text-left text-xs font-bold text-muted uppercase tracking-wider px-4 py-3">Statut</th>
+                <th className="text-left text-xs font-bold text-muted uppercase tracking-wider px-4 py-3">Assigné à</th>
+                <th className="text-left text-xs font-bold text-muted uppercase tracking-wider px-4 py-3">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-dgray/20">
-              {sortedTickets.map((ticket) => (
-                <tr
-                  key={ticket.id}
-                  className="hover:bg-dgray/20 transition-colors"
-                >
-                  <td className="px-4 py-3 text-xs text-muted font-mono">{ticket.id}</td>
-                  <td className="px-4 py-3 text-sm text-lgray">{getArtistName(ticket.artistId)}</td>
-                  <td className="px-4 py-3">
-                    <Badge category={ticket.category} />
-                  </td>
-                  <td className="px-4 py-3 text-sm text-white max-w-xs">
-                    <span className="line-clamp-1">{ticket.subject}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge priority={ticket.priority} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge status={ticket.status} />
-                  </td>
-                  <td className="px-4 py-3 text-sm text-lgray">{getAgentName(ticket.assignedTo)}</td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => navigate(`/agent/tickets/${ticket.id}`)}
-                      className="text-xs text-purple hover:text-purple/80 transition-colors cursor-pointer"
-                    >
-                      Ouvrir →
-                    </button>
-                  </td>
-                </tr>
-              ))}
+            <tbody>
+              {sortedTickets.map((ticket) => {
+                const artist = getArtistById(ticket.artistId)
+                const isCritical = ticket.priority === 'critical'
+                return (
+                  <tr
+                    key={ticket.id}
+                    className={`border-b border-border/40 h-14 ${isCritical ? 'bg-red/5 hover:bg-red/8' : 'hover:bg-white/3'} cursor-pointer`}
+                    onClick={() => navigate(`/agent/tickets/${ticket.id}`)}
+                  >
+                    <td className="px-4 py-3 font-mono text-teal text-xs">{ticket.id}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {artist && (
+                          <div
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
+                            style={{ backgroundColor: artist.color }}
+                          >
+                            {artist.avatar}
+                          </div>
+                        )}
+                        <span className="text-lgray text-sm">{artist?.name || ticket.artistId}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge category={ticket.category} />
+                    </td>
+                    <td className="px-4 py-3 text-white text-sm max-w-xs">
+                      <span className="line-clamp-1" title={ticket.subject}>{ticket.subject}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge priority={ticket.priority} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge status={ticket.status} />
+                    </td>
+                    <td className="px-4 py-3">
+                      {ticket.assignedTo ? (
+                        <span className="text-lgray text-sm">{getAgentName(ticket.assignedTo)}</span>
+                      ) : (
+                        <span className="text-purple text-xs hover:underline cursor-pointer">Assigner</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3" onClick={(e) => { e.stopPropagation(); navigate(`/agent/tickets/${ticket.id}`) }}>
+                      <span className="bg-purple/20 text-purple text-xs px-3 py-1.5 rounded-lg hover:bg-purple/30 cursor-pointer">
+                        Ouvrir →
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Mes tickets + Performance */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Bottom panels */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-slide-up">
         {/* My assigned tickets */}
-        <div className="bg-card border border-dgray/30 rounded-xl overflow-hidden">
-          <div className="p-5 border-b border-dgray/30">
+        <div className="bg-card border border-border rounded-2xl overflow-hidden">
+          <div className="bg-surface px-5 py-4 border-b border-border">
             <h2 className="text-base font-semibold text-white">
               Mes tickets assignés
               <span className="text-xs text-muted ml-2 font-normal">({assignedToMe.length})</span>
@@ -189,9 +209,9 @@ export default function AgentDashboard() {
                 <div
                   key={ticket.id}
                   onClick={() => navigate(`/agent/tickets/${ticket.id}`)}
-                  className="flex items-center gap-3 p-3 bg-dgray/20 rounded-lg hover:bg-dgray/40 transition-colors cursor-pointer"
+                  className="flex items-center gap-3 p-3 bg-dgray/20 rounded-xl hover:bg-dgray/40 cursor-pointer"
                 >
-                  <span className="text-xs text-muted font-mono w-14">{ticket.id}</span>
+                  <span className="font-mono text-teal text-xs w-14">{ticket.id}</span>
                   <span className="flex-1 text-sm text-white truncate">{ticket.subject}</span>
                   <Badge priority={ticket.priority} />
                 </div>
@@ -200,18 +220,18 @@ export default function AgentDashboard() {
           </div>
         </div>
 
-        {/* Performance stats */}
-        <div className="bg-card border border-dgray/30 rounded-xl p-5">
+        {/* Performance */}
+        <div className="bg-card border border-border rounded-2xl p-5">
           <h2 className="text-base font-semibold text-white mb-4">Performance</h2>
           <div className="grid grid-cols-2 gap-4">
             {[
               { label: 'Tickets résolus ce mois', value: '12', color: '#00E676' },
-              { label: 'Temps de réponse moyen', value: '2.4h', color: '#00BCD4' },
-              { label: 'Taux de résolution', value: '89%', color: '#7B5EA7' },
-              { label: 'Score satisfaction', value: '4.7/5', color: '#E040FB' },
+              { label: 'Temps de réponse moyen',  value: '2.4h', color: '#00BCD4' },
+              { label: 'Taux de résolution',       value: '89%', color: '#7B5EA7' },
+              { label: 'Score satisfaction',        value: '4.7/5', color: '#E040FB' },
             ].map((stat) => (
-              <div key={stat.label} className="bg-dgray/30 rounded-lg p-3 border border-dgray/40">
-                <div className="text-xl font-bold" style={{ color: stat.color }}>{stat.value}</div>
+              <div key={stat.label} className="bg-dgray/30 rounded-xl p-3 border border-border">
+                <div className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</div>
                 <div className="text-xs text-muted mt-1">{stat.label}</div>
               </div>
             ))}

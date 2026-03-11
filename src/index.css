@@ -1,28 +1,76 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #0A0A0F;
-  --color-surface: #13131A;
-  --color-card: #1C1C27;
-  --color-dgray: #2A2A38;
-  --color-purple: #7B5EA7;
-  --color-pink: #E040FB;
-  --color-teal: #00BCD4;
-  --color-green: #00E676;
-  --color-orange: #FF6D00;
-  --color-red: #FF1744;
-  --color-lgray: #9090A8;
-  --color-muted: #6B6B80;
-  --font-family-sans: 'Inter', sans-serif;
+  --color-bg:           #0A0A0F;
+  --color-surface:      #13131A;
+  --color-card:         #1C1C27;
+  --color-dgray:        #2A2A38;
+  --color-border:       #2A2A38;
+  --color-purple:       #7B5EA7;
+  --color-purple-light: #9B7EC7;
+  --color-pink:         #E040FB;
+  --color-teal:         #00BCD4;
+  --color-green:        #00E676;
+  --color-orange:       #FF6D00;
+  --color-red:          #FF1744;
+  --color-lgray:        #9090A8;
+  --color-muted:        #6B6B80;
+
+  --font-family-sans: 'Inter', system-ui, sans-serif;
+  --font-family-mono: 'JetBrains Mono', monospace;
+
+  --animate-fade-in:   fadeIn 0.2s ease-out;
+  --animate-slide-up:  slideUp 0.3s ease-out;
+  --animate-pulse-dot: pulseDot 2s infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+:root {
+  --purple-glow: rgba(123, 94, 167, 0.15);
+  --pink-glow:   rgba(224, 64, 251, 0.1);
+  --teal-glow:   rgba(0, 188, 212, 0.1);
+  --red-glow:    rgba(255, 23, 68, 0.1);
 }
 
 * {
   box-sizing: border-box;
+  transition-property: background-color, border-color, color, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
 }
+
+button, a {
+  transition: all 150ms ease;
+}
+
+*:focus-visible {
+  outline: 2px solid #7B5EA7;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #13131A; }
+::-webkit-scrollbar-thumb { background: #2A2A38; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #7B5EA7; }
 
 body {
   margin: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   background-color: #0A0A0F;
   color: white;
 }

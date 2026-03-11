@@ -7,7 +7,6 @@ import FilterBar from '../components/tickets/FilterBar'
 import TicketRow from '../components/tickets/TicketRow'
 import TicketDetail from '../components/tickets/TicketDetail'
 import EmptyState from '../components/ui/EmptyState'
-import Button from '../components/ui/Button'
 
 export default function TicketTrackingPage() {
   const navigate = useNavigate()
@@ -26,7 +25,13 @@ export default function TicketTrackingPage() {
     return matchesFilter && matchesSearch
   })
 
-  // Auto-select first ticket or URL param
+  const counts: Record<string, number> = {
+    all:         userTickets.length,
+    in_progress: userTickets.filter((t) => t.status === 'in_progress').length,
+    pending:     userTickets.filter((t) => t.status === 'pending').length,
+    resolved:    userTickets.filter((t) => t.status === 'resolved').length,
+  }
+
   useEffect(() => {
     if (id) {
       setSelectedId(id)
@@ -43,21 +48,22 @@ export default function TicketTrackingPage() {
   }
 
   const handleAddMessage = (msg: Message) => {
-    if (selectedId) {
-      addMessage(selectedId, msg)
-    }
+    if (selectedId) addMessage(selectedId, msg)
   }
 
   return (
-    <div className="min-h-screen bg-bg flex">
-      {/* Left column - ticket list */}
-      <div className="w-[37%] min-w-64 border-r border-dgray/30 flex flex-col bg-bg">
-        <div className="p-4 border-b border-dgray/30 flex items-center justify-between">
+    <div className="flex h-[calc(100vh-64px)] bg-bg overflow-hidden">
+      {/* Left column */}
+      <div className="w-[400px] min-w-64 border-r border-border flex flex-col bg-bg flex-shrink-0">
+        <div className="px-5 py-4 border-b border-border flex items-center justify-between flex-shrink-0">
           <h1 className="text-base font-semibold text-white">Mes tickets</h1>
-          <Button variant="primary" size="sm" onClick={() => navigate('/artist/new-ticket')}>
-            <Plus size={13} />
+          <button
+            onClick={() => navigate('/artist/new-ticket')}
+            className="flex items-center gap-1 bg-purple/20 text-purple border border-purple/40 hover:bg-purple/30 text-xs font-medium px-3 py-1.5 rounded-lg cursor-pointer"
+          >
+            <Plus size={12} />
             Nouveau
-          </Button>
+          </button>
         </div>
 
         <FilterBar
@@ -65,9 +71,10 @@ export default function TicketTrackingPage() {
           onFilterChange={setActiveFilter}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          counts={counts}
         />
 
-        <div className="flex-1 overflow-y-auto divide-y divide-dgray/20">
+        <div className="flex-1 overflow-y-auto">
           {filteredTickets.length === 0 ? (
             <EmptyState
               message="Aucun ticket trouvé."
@@ -87,15 +94,15 @@ export default function TicketTrackingPage() {
         </div>
       </div>
 
-      {/* Right column - ticket detail */}
-      <div className="flex-1 flex flex-col">
+      {/* Right column */}
+      <div className="flex-1 overflow-y-auto">
         {selectedTicket ? (
           <TicketDetail
             ticket={selectedTicket}
             onAddMessage={handleAddMessage}
           />
         ) : (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex items-center justify-center h-full">
             <EmptyState
               message="Sélectionnez un ticket pour voir les détails."
               ctaLabel="Créer un ticket"

@@ -1,10 +1,13 @@
-import { useState } from 'react'
-import { X, Send, AlertTriangle, CheckCircle } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Send, CheckCircle, AlertTriangle, Paperclip } from 'lucide-react'
 import type { Ticket, Message } from '../../types/ticket'
 import { useTicketStore } from '../../store/useTicketStore'
+import { mockUsers } from '../../data/mockUsers'
+import { mockReleases } from '../../data/mockReleases'
 import Badge from '../ui/Badge'
 import Button from '../ui/Button'
 import StatusTimeline from '../ui/StatusTimeline'
+import Toast from '../ui/Toast'
 
 interface TicketDetailProps {
   ticket: Ticket
@@ -13,135 +16,131 @@ interface TicketDetailProps {
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
+  return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-export default function TicketDetail({ ticket, onAddMessage, onClose }: TicketDetailProps) {
+
+export default function TicketDetail({ ticket, onAddMessage }: TicketDetailProps) {
   const [messageText, setMessageText] = useState('')
+  const [toast, setToast] = useState(false)
+  const [sending, setSending] = useState(false)
   const { currentUser, updateStatus } = useTicketStore()
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const assignedUser = ticket.assignedTo ? mockUsers.find((u) => u.id === ticket.assignedTo) : null
+  const release = ticket.releaseId ? mockReleases.find((r) => r.id === ticket.releaseId) : null
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [ticket.messages.length])
 
   const handleSend = () => {
     if (!messageText.trim() || !currentUser) return
-    const msg: Message = {
-      author: currentUser.id,
-      role: currentUser.role,
-      content: messageText.trim(),
-      createdAt: new Date().toISOString(),
-    }
-    onAddMessage(msg)
-    setMessageText('')
+    setSending(true)
+    setTimeout(() => {
+      const msg: Message = {
+        author: currentUser.id,
+        role: currentUser.role,
+        content: messageText.trim(),
+        createdAt: new Date().toISOString(),
+      }
+      onAddMessage(msg)
+      setMessageText('')
+      setSending(false)
+      setToast(true)
+    }, 400)
   }
 
-  const handleClose = () => {
-    updateStatus(ticket.id, 'closed')
-  }
-
-  const handlePersists = () => {
-    updateStatus(ticket.id, 'in_progress')
-  }
+  const handleClose = () => { updateStatus(ticket.id, 'closed') }
+  const handlePersists = () => { updateStatus(ticket.id, 'in_progress') }
 
   return (
-    <div className="flex flex-col h-full bg-surface">
+    <div className="flex flex-col h-full bg-bg overflow-hidden">
+      <Toast show={toast} title="Message envoyé" subtitle="Votre message a été ajouté." type="success" onClose={() => setToast(false)} />
+
       {/* Header */}
-      <div className="flex items-start justify-between p-5 border-b border-dgray/30">
-        <div className="flex-1 min-w-0 pr-4">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs text-muted font-mono">{ticket.id}</span>
-          </div>
-          <h2 className="text-base font-semibold text-white leading-snug">{ticket.subject}</h2>
-          <div className="flex items-center gap-2 mt-2 flex-wrap">
-            <Badge status={ticket.status} />
-            <Badge priority={ticket.priority} />
-            <Badge category={ticket.category} />
-          </div>
+      <div className="p-5 border-b border-border flex-shrink-0">
+        <span className="font-mono text-teal text-sm">{ticket.id}</span>
+        <h2 className="text-2xl font-bold text-white mt-1 leading-tight">{ticket.subject}</h2>
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          <Badge status={ticket.status} />
+          <Badge priority={ticket.priority} />
+          <Badge category={ticket.category} />
         </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="text-muted hover:text-white transition-colors flex-shrink-0 cursor-pointer"
-          >
-            <X size={18} />
-          </button>
-        )}
       </div>
 
       {/* Metadata */}
-      <div className="grid grid-cols-2 gap-3 p-5 border-b border-dgray/30">
+      <div className="px-5 py-4 border-b border-border grid grid-cols-2 gap-3 flex-shrink-0">
         <div>
-          <p className="text-xs text-muted">Créé le</p>
-          <p className="text-sm text-white mt-0.5">{formatDate(ticket.createdAt)}</p>
+          <p className="text-muted text-xs uppercase tracking-wider">Créé le</p>
+          <p className="text-white text-sm font-medium mt-1">{formatDate(ticket.createdAt)}</p>
         </div>
         <div>
-          <p className="text-xs text-muted">Mis à jour le</p>
-          <p className="text-sm text-white mt-0.5">{formatDate(ticket.updatedAt)}</p>
+          <p className="text-muted text-xs uppercase tracking-wider">Mis à jour le</p>
+          <p className="text-white text-sm font-medium mt-1">{formatDate(ticket.updatedAt)}</p>
         </div>
-        {ticket.assignedTo && (
+        {assignedUser && (
           <div>
-            <p className="text-xs text-muted">Assigné à</p>
-            <p className="text-sm text-white mt-0.5">Inès Morel</p>
+            <p className="text-muted text-xs uppercase tracking-wider">Assigné à</p>
+            <p className="text-white text-sm font-medium mt-1">{assignedUser.name}</p>
           </div>
         )}
-        {ticket.releaseId && (
+        {release && (
           <div>
-            <p className="text-xs text-muted">Sortie</p>
-            <p className="text-sm text-white mt-0.5">{ticket.releaseId}</p>
+            <p className="text-muted text-xs uppercase tracking-wider">Sortie concernée</p>
+            <p className="text-white text-sm font-medium mt-1">{release.title}</p>
           </div>
         )}
         {ticket.tags.length > 0 && (
           <div className="col-span-2">
-            <p className="text-xs text-muted mb-1">Tags</p>
-            <div className="flex gap-1 flex-wrap">
+            <p className="text-muted text-xs uppercase tracking-wider mb-2">Tags</p>
+            <div className="flex flex-wrap gap-1.5">
               {ticket.tags.map((tag) => (
-                <span key={tag} className="text-xs bg-dgray/60 text-lgray rounded-full px-2 py-0.5 border border-dgray/40">
-                  {tag}
-                </span>
+                <span key={tag} className="text-xs bg-dgray text-lgray rounded-full px-2.5 py-1 border border-border">{tag}</span>
               ))}
             </div>
           </div>
         )}
       </div>
 
-      {/* Timeline */}
+      {/* Conversation */}
       <div className="flex-1 overflow-y-auto p-5">
-        <h3 className="text-xs text-muted uppercase tracking-wide mb-4 font-semibold">Conversation</h3>
+        <p className="text-xs font-bold text-muted uppercase tracking-widest mb-4">Conversation</p>
         <StatusTimeline messages={ticket.messages} />
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Reply area */}
+      {/* Reply */}
       {ticket.status !== 'closed' && (
-        <div className="p-5 border-t border-dgray/30">
+        <div className="sticky bottom-0 border-t border-border p-4 bg-surface flex-shrink-0">
           <textarea
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             placeholder="Écrire un message..."
             rows={3}
-            className="w-full bg-dgray border border-dgray/60 rounded-lg px-3 py-2 text-sm text-white placeholder-muted outline-none transition-all focus:border-purple focus:ring-1 focus:ring-purple/30 resize-none"
+            disabled={sending}
+            className="w-full bg-dgray border border-border rounded-xl px-4 py-3 text-sm text-white placeholder:text-muted outline-none focus:border-purple focus:ring-1 focus:ring-purple/30 resize-none disabled:opacity-60"
           />
           <div className="flex items-center justify-between mt-3">
-            <div className="flex gap-2">
+            <div className="flex items-center gap-3">
+              <button className="flex items-center gap-1.5 text-lgray text-sm hover:text-white cursor-pointer">
+                <Paperclip size={14} />
+                Joindre
+              </button>
               {ticket.status === 'resolved' && (
                 <>
-                  <Button variant="danger" size="sm" onClick={handleClose}>
+                  <Button variant="success" size="sm" onClick={handleClose}>
                     <CheckCircle size={13} />
                     Clore ce ticket
                   </Button>
                   <Button variant="ghost" size="sm" onClick={handlePersists}>
                     <AlertTriangle size={13} />
-                    Le problème persiste
+                    Problème persiste
                   </Button>
                 </>
               )}
             </div>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleSend}
-              disabled={!messageText.trim()}
-            >
+            <Button variant="primary" size="sm" onClick={handleSend} loading={sending} disabled={!messageText.trim()}>
               <Send size={13} />
               Envoyer
             </Button>
@@ -150,8 +149,8 @@ export default function TicketDetail({ ticket, onAddMessage, onClose }: TicketDe
       )}
 
       {ticket.status === 'closed' && (
-        <div className="p-5 border-t border-dgray/30">
-          <div className="flex items-center gap-2 text-sm text-muted bg-dgray/20 rounded-lg p-3">
+        <div className="p-5 border-t border-border flex-shrink-0">
+          <div className="flex items-center gap-2 text-sm text-muted bg-dgray/30 rounded-xl p-3">
             <CheckCircle size={15} className="text-green" />
             Ce ticket est clôturé.
           </div>

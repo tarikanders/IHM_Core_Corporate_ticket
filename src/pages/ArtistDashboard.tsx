@@ -1,6 +1,5 @@
-
 import { useNavigate } from 'react-router-dom'
-import { Plus, TicketIcon, AlertTriangle, Disc, DollarSign, Bell } from 'lucide-react'
+import { Plus, TicketIcon, AlertTriangle, Disc, DollarSign, Bell, Music } from 'lucide-react'
 import { useTicketStore } from '../store/useTicketStore'
 import { mockReleases } from '../data/mockReleases'
 import StatCard from '../components/ui/StatCard'
@@ -8,17 +7,23 @@ import TicketRow from '../components/tickets/TicketRow'
 import Button from '../components/ui/Button'
 
 const platformLabels: Record<string, string> = {
-  spotify: 'Spotify',
+  spotify:    'Spotify',
   appleMusic: 'Apple Music',
-  deezer: 'Deezer',
-  amazon: 'Amazon',
-  tidal: 'Tidal',
+  deezer:     'Deezer',
+  amazon:     'Amazon',
+  tidal:      'Tidal',
 }
 
+const releaseGradients = [
+  'from-purple to-pink',
+  'from-teal to-blue-500',
+  'from-orange to-red',
+]
+
 const notifications = [
-  { id: 1, message: "Votre ticket TK-019 a été mis à jour par Inès Morel.", time: "il y a 2h", type: 'info' },
-  { id: 2, message: "Votre royalties du mois de mai sont disponibles.", time: "il y a 1 jour", type: 'success' },
-  { id: 3, message: "Rappel : vérifiez la disponibilité de 'Nuit Stellaire' sur Deezer.", time: "il y a 3 jours", type: 'warning' },
+  { id: 1, message: 'Votre ticket TK-019 a été mis à jour par', highlight: 'Inès Morel.', time: 'il y a 2h', type: 'info', dot: 'bg-teal animate-pulse-dot' },
+  { id: 2, message: 'Vos royalties du mois de mai sont disponibles.', highlight: '', time: 'il y a 1 jour', type: 'success', dot: 'bg-green' },
+  { id: 3, message: 'Rappel : vérifiez la disponibilité de', highlight: '\"Nuit Stellaire\" sur Deezer.', time: 'il y a 3 jours', type: 'warning', dot: 'bg-orange' },
 ]
 
 export default function ArtistDashboard() {
@@ -26,70 +31,80 @@ export default function ArtistDashboard() {
   const { tickets, currentUser } = useTicketStore()
 
   const userTickets = tickets.filter((t) => t.artistId === currentUser?.id)
-  const openTickets = userTickets.filter((t) => t.status === 'pending' || t.status === 'in_progress')
+  const openTickets  = userTickets.filter((t) => t.status === 'pending' || t.status === 'in_progress')
   const urgentTickets = userTickets.filter((t) => t.priority === 'critical' && t.status !== 'closed')
   const recentTickets = userTickets.slice(0, 4)
-
   const artistReleases = mockReleases.filter((r) => r.artistId === currentUser?.id).slice(0, 3)
 
   return (
-    <div className="min-h-screen bg-bg p-6">
+    <div className="min-h-screen bg-bg p-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Tableau de bord</h1>
-          <p className="text-lgray text-sm mt-1">
-            Bienvenue, {currentUser?.name || 'Artiste'}
-          </p>
+          <h1 className="text-3xl font-bold text-white">Tableau de bord</h1>
+          <p className="text-lgray text-base mt-1">Bienvenue, {currentUser?.name || 'Artiste'}</p>
         </div>
-        <Button variant="primary" onClick={() => navigate('/artist/new-ticket')}>
+        <Button
+          variant="primary"
+          size="md"
+          onClick={() => navigate('/artist/new-ticket')}
+          className="px-5 py-2.5 rounded-xl hover:shadow-[0_0_20px_rgba(123,94,167,0.4)]"
+        >
           <Plus size={15} />
           Nouveau ticket
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-slide-up">
         <StatCard
           value={openTickets.length}
           label="Tickets ouverts"
-          color="#7B5EA7"
-          icon={<TicketIcon size={24} />}
+          gradient="from-purple to-pink"
+          iconBg="bg-purple/15"
+          icon={<TicketIcon size={20} className="text-purple" />}
+          trend="↑ +2 cette semaine"
         />
         <StatCard
           value={urgentTickets.length}
           label="Tickets urgents"
-          color="#FF1744"
-          icon={<AlertTriangle size={24} />}
+          gradient="from-red to-orange"
+          iconBg="bg-red/15"
+          icon={<AlertTriangle size={20} className="text-red" />}
+          pulse={urgentTickets.length > 0}
         />
         <StatCard
           value={artistReleases.length}
           label="Sorties actives"
-          color="#00BCD4"
-          icon={<Disc size={24} />}
+          gradient="from-teal to-green"
+          iconBg="bg-teal/15"
+          icon={<Disc size={20} className="text-teal" />}
         />
         <StatCard
           value="€342"
           label="Royalties dues"
-          color="#00E676"
-          icon={<DollarSign size={24} />}
+          gradient="from-green to-teal"
+          iconBg="bg-green/15"
+          icon={<DollarSign size={20} className="text-green" />}
+          trend="Disponibles"
+          trendColor="text-green"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Tickets */}
-        <div className="lg:col-span-2">
-          <div className="bg-card border border-dgray/30 rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between p-5 border-b border-dgray/30">
-              <h2 className="text-base font-semibold text-white">Tickets récents</h2>
+        <div className="lg:col-span-2 animate-slide-up">
+          <div className="bg-card border border-border rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between bg-surface px-5 py-4 border-b border-border">
+              <h2 className="text-lg font-semibold text-white">Tickets récents</h2>
               <button
                 onClick={() => navigate('/artist/tickets')}
-                className="text-xs text-purple hover:text-purple/80 transition-colors cursor-pointer"
+                className="text-sm text-purple hover:text-purple-light cursor-pointer"
               >
                 Voir tous →
               </button>
             </div>
-            <div className="divide-y divide-dgray/20">
+            <div>
               {recentTickets.length === 0 ? (
                 <div className="p-8 text-center text-muted text-sm">Aucun ticket pour le moment.</div>
               ) : (
@@ -105,31 +120,36 @@ export default function ArtistDashboard() {
           </div>
 
           {/* Recent Releases */}
-          <div className="bg-card border border-dgray/30 rounded-xl overflow-hidden mt-6">
-            <div className="flex items-center justify-between p-5 border-b border-dgray/30">
-              <h2 className="text-base font-semibold text-white">Sorties récentes</h2>
+          <div className="bg-card border border-border rounded-2xl overflow-hidden mt-6">
+            <div className="flex items-center justify-between bg-surface px-5 py-4 border-b border-border">
+              <h2 className="text-lg font-semibold text-white">Sorties récentes</h2>
+              <button
+                onClick={() => navigate('/artist/releases')}
+                className="text-sm text-purple hover:text-purple-light cursor-pointer"
+              >
+                Voir toutes →
+              </button>
             </div>
             <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {artistReleases.map((release) => (
-                <div key={release.id} className="bg-dgray/30 rounded-xl p-4 border border-dgray/40">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 bg-purple/20 rounded-lg flex items-center justify-center">
-                      <Disc size={14} className="text-purple" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{release.title}</p>
-                      <p className="text-xs text-muted">{release.type}</p>
-                    </div>
+              {artistReleases.map((release, i) => (
+                <div key={release.id} className="bg-surface border border-border rounded-xl p-4 flex gap-4">
+                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${releaseGradients[i % 3]} flex items-center justify-center flex-shrink-0`}>
+                    <Music size={20} className="text-white" />
                   </div>
-                  <div className="grid grid-cols-1 gap-1">
-                    {Object.entries(release.platforms).map(([platform, available]) => (
-                      <div key={platform} className="flex items-center gap-2 text-xs">
-                        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${available ? 'bg-green' : 'bg-red'}`} />
-                        <span className={available ? 'text-lgray' : 'text-red'}>
-                          {platformLabels[platform]}
-                        </span>
-                      </div>
-                    ))}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-semibold text-sm truncate">{release.title}</p>
+                    <p className="text-muted text-xs">{release.type}</p>
+                    <div className="mt-2 flex flex-col gap-1">
+                      {Object.entries(release.platforms).map(([platform, available]) => (
+                        <div key={platform} className="flex items-center gap-1.5 text-xs">
+                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${available ? 'bg-green' : 'bg-red'}`} />
+                          <span className={available ? 'text-lgray' : 'text-red'}>
+                            {platformLabels[platform]}
+                            {!available && ' ⚠'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -138,22 +158,22 @@ export default function ArtistDashboard() {
         </div>
 
         {/* Notifications */}
-        <div>
-          <div className="bg-card border border-dgray/30 rounded-xl overflow-hidden">
-            <div className="flex items-center gap-2 p-5 border-b border-dgray/30">
+        <div className="animate-slide-up">
+          <div className="bg-card border border-border rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-2 bg-surface px-5 py-4 border-b border-border">
               <Bell size={15} className="text-purple" />
-              <h2 className="text-base font-semibold text-white">Notifications</h2>
+              <h2 className="text-lg font-semibold text-white">Notifications</h2>
             </div>
-            <div className="p-4 flex flex-col gap-3">
-              {notifications.map((notif) => (
-                <div key={notif.id} className="flex items-start gap-3 p-3 bg-dgray/20 rounded-lg border border-dgray/30">
-                  <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
-                    notif.type === 'success' ? 'bg-green' :
-                    notif.type === 'warning' ? 'bg-orange' : 'bg-teal'
-                  }`} />
+            <div className="p-4 flex flex-col">
+              {notifications.map((notif, idx) => (
+                <div key={notif.id} className={`flex items-start gap-3 py-3 ${idx < notifications.length - 1 ? 'border-b border-border/40' : ''}`}>
+                  <div className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${notif.dot}`} />
                   <div>
-                    <p className="text-xs text-white leading-relaxed">{notif.message}</p>
-                    <p className="text-xs text-muted mt-1">{notif.time}</p>
+                    <p className="text-lgray text-sm leading-snug">
+                      {notif.message}{' '}
+                      {notif.highlight && <span className="text-white font-medium">{notif.highlight}</span>}
+                    </p>
+                    <p className="text-muted text-xs mt-0.5">{notif.time}</p>
                   </div>
                 </div>
               ))}

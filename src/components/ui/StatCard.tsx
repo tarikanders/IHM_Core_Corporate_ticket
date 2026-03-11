@@ -3,25 +3,40 @@ import React from 'react'
 interface StatCardProps {
   value: string | number
   label: string
-  color: string
+  gradient: string
   icon?: React.ReactNode
+  iconBg?: string
+  trend?: string
+  trendColor?: string
+  pulse?: boolean
   className?: string
 }
 
-export default function StatCard({ value, label, color, icon, className = '' }: StatCardProps) {
+export default function StatCard({
+  value,
+  label,
+  gradient,
+  icon,
+  iconBg,
+  trend,
+  trendColor = 'text-green',
+  pulse = false,
+  className = '',
+}: StatCardProps) {
   return (
-    <div className={`bg-card border border-dgray/30 rounded-xl overflow-hidden ${className}`}>
-      <div className="h-1 w-full" style={{ backgroundColor: color }} />
+    <div className={`group bg-card border border-border rounded-2xl overflow-hidden hover:border-purple/30 transition-all cursor-default ${className}`}>
+      <div className={`h-1.5 w-full bg-gradient-to-r ${gradient}`} />
       <div className="p-5">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between">
           <div>
-            <div className="text-3xl font-bold" style={{ color }}>
+            <div className={`text-4xl font-bold tracking-tight ${pulse ? 'animate-pulse text-red' : 'text-white'}`}>
               {value}
             </div>
             <div className="text-sm text-lgray mt-1">{label}</div>
+            {trend && <div className={`text-xs mt-1 ${trendColor}`}>{trend}</div>}
           </div>
-          {icon && (
-            <div className="opacity-60" style={{ color }}>
+          {icon && iconBg && (
+            <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
               {icon}
             </div>
           )}

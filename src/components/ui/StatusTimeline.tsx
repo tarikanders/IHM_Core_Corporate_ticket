@@ -1,4 +1,3 @@
-
 import type { Message } from '../../types/ticket'
 
 interface StatusTimelineProps {
@@ -16,19 +15,19 @@ function formatDate(dateStr: string): string {
 }
 
 const authorColors: Record<string, string> = {
-  'user-lea': '#E040FB',
+  'user-lea':   '#E040FB',
   'user-karim': '#00BCD4',
   'agent-ines': '#7B5EA7',
 }
 
 const authorInitials: Record<string, string> = {
-  'user-lea': 'L',
+  'user-lea':   'L',
   'user-karim': 'K',
   'agent-ines': 'I',
 }
 
 const authorNames: Record<string, string> = {
-  'user-lea': 'Léa Rousseau',
+  'user-lea':   'Léa Rousseau',
   'user-karim': 'Karim Benali',
   'agent-ines': 'Inès Morel',
 }
@@ -50,45 +49,44 @@ export default function StatusTimeline({ messages }: StatusTimelineProps) {
         const initials = authorInitials[msg.author] || msg.author[0]?.toUpperCase() || '?'
         const name = authorNames[msg.author] || msg.author
 
-        return (
-          <div key={index} className="flex gap-3 relative">
-            {/* Timeline line */}
-            {index < messages.length - 1 && (
+        if (isAgent) {
+          return (
+            <div key={index} className="flex gap-3 mb-4 flex-row-reverse">
               <div
-                className="absolute left-4 top-10 w-0.5 bg-dgray/50"
-                style={{ height: 'calc(100% - 8px)' }}
-              />
-            )}
-
-            {/* Avatar */}
-            <div className="flex-shrink-0 z-10">
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
                 style={{ backgroundColor: color }}
               >
                 {initials}
               </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 justify-end mb-1">
+                  <span className="text-xs text-muted">{formatDate(msg.createdAt)}</span>
+                  <span className="bg-purple/20 text-purple text-xs px-1.5 py-0.5 rounded font-medium">Agent</span>
+                  <span className="text-sm font-medium text-white">{name}</span>
+                </div>
+                <div className="bg-purple/10 border border-purple/20 rounded-2xl rounded-tr-sm px-4 py-3">
+                  <p className="text-sm text-white/90 leading-relaxed">{msg.content}</p>
+                </div>
+              </div>
             </div>
+          )
+        }
 
-            {/* Content */}
-            <div className="flex-1 pb-6">
+        return (
+          <div key={index} className="flex gap-3 mb-4">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+              style={{ backgroundColor: color }}
+            >
+              {initials}
+            </div>
+            <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm font-medium text-white">{name}</span>
-                {isAgent && (
-                  <span className="text-xs bg-purple/20 text-purple border border-purple/30 rounded-full px-2 py-0.5 font-bold">
-                    Agent
-                  </span>
-                )}
-                <span className="text-xs text-muted ml-auto">{formatDate(msg.createdAt)}</span>
+                <span className="text-xs text-muted">{formatDate(msg.createdAt)}</span>
               </div>
-              <div
-                className={`rounded-lg p-3 text-sm text-white/90 ${
-                  isAgent
-                    ? 'bg-purple/10 border border-purple/20'
-                    : 'bg-dgray/40 border border-dgray/30'
-                }`}
-              >
-                {msg.content}
+              <div className="bg-dgray border border-border rounded-2xl rounded-tl-sm px-4 py-3">
+                <p className="text-sm text-lgray leading-relaxed">{msg.content}</p>
               </div>
             </div>
           </div>
