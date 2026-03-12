@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, TicketIcon, AlertTriangle, Disc, DollarSign, Bell, ArrowDownToLine, MessageCircle, } from 'lucide-react'
+import { Plus, TicketIcon, AlertTriangle, Disc, DollarSign, Bell, ArrowDownToLine, MessageCircle, Upload, X, Check } from 'lucide-react'
 import { useTicketStore } from '../store/useTicketStore'
 import { mockReleases } from '../data/mockReleases'
 import StatCard from '../components/ui/StatCard'
@@ -22,9 +23,14 @@ const notifications = [
   { id: 3, message: 'Rappel : vérifiez la disponibilité de', highlight: '\"Nuit Stellaire\" sur Deezer.', time: 'il y a 3 jours', type: 'warning', dot: 'bg-orange' },
 ]
 
+const allPlatforms = ['Spotify', 'Apple Music', 'Deezer', 'Amazon Music', 'Tidal', 'YouTube Music']
+
 export default function ArtistDashboard() {
   const navigate = useNavigate()
   const { tickets, currentUser } = useTicketStore()
+  const [showDistrib, setShowDistrib] = useState(false)
+  const [distribDone, setDistribDone] = useState(false)
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['Spotify', 'Apple Music', 'Deezer'])
 
   const userTickets = tickets.filter((t) => t.artistId === currentUser?.id)
   const openTickets  = userTickets.filter((t) => t.status === 'pending' || t.status === 'in_progress')
@@ -38,23 +44,139 @@ export default function ArtistDashboard() {
     return t.messages[t.messages.length - 1].role === 'agent'
   })
 
+  const togglePlatform = (p: string) =>
+    setSelectedPlatforms((prev) => prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p])
+
+  const handleDistribute = () => setDistribDone(true)
+
   return (
     <div className="min-h-screen bg-bg p-6 animate-fade-in">
+
+      {/* Distribution modal */}
+      {showDistrib && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowDistrib(false)} />
+          <div className="relative bg-card border border-border rounded-2xl w-full max-w-md animate-slide-up shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-teal/15 flex items-center justify-center">
+                  <Upload size={16} className="text-teal" />
+                </div>
+                <h2 className="text-white font-semibold text-base">Distribuer une sortie</h2>
+              </div>
+              <button onClick={() => setShowDistrib(false)} className="text-muted hover:text-white cursor-pointer">
+                <X size={18} />
+              </button>
+            </div>
+
+            {!distribDone ? (
+              <div className="p-6 flex flex-col gap-5">
+                {/* Release selector */}
+                <div>
+                  <label className="text-xs text-muted mb-2 block">Sortie à distribuer</label>
+                  <select className="w-full bg-dgray border border-border rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-teal/40 cursor-pointer">
+                    {mockReleases.filter((r) => r.artistId === currentUser?.id).map((r) => (
+                      <option key={r.id} value={r.id}>{r.title} — {r.type}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Platforms */}
+                <div>
+                  <label className="text-xs text-muted mb-2 block">Plateformes cibles</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {allPlatforms.map((p) => {
+                      const active = selectedPlatforms.includes(p)
+                      return (
+                        <button
+                          key={p}
+                          onClick={() => togglePlatform(p)}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border transition-all duration-100 cursor-pointer
+                            ${active ? 'bg-teal/15 border-teal/40 text-teal' : 'bg-dgray border-border text-muted hover:text-white hover:border-border/80'}`}
+                        >
+                          <span className={`w-3.5 h-3.5 rounded-full border flex-shrink-0 flex items-center justify-center ${active ? 'bg-teal border-teal' : 'border-muted'}`}>
+                            {active && <Check size={9} className="text-bg" strokeWidth={3} />}
+                          </span>
+                          {p}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Date */}
+                <div>
+                  <label className="text-xs text-muted mb-2 block">Date de sortie</label>
+                  <input
+                    type="date"
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                    className="w-full bg-dgray border border-border rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-teal/40 cursor-pointer"
+                  />
+                </div>
+
+                <button
+                  onClick={handleDistribute}
+                  disabled={selectedPlatforms.length === 0}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-teal to-green text-bg font-semibold text-sm rounded-xl py-3 hover:opacity-90 active:scale-95 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]"
+                >
+                  <Upload size={15} />
+                  Lancer la distribution sur {selectedPlatforms.length} plateforme{selectedPlatforms.length > 1 ? 's' : ''}
+                </button>
+              </div>
+            ) : (
+              /* Success state */
+              <div className="p-8 flex flex-col items-center text-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-green/15 flex items-center justify-center">
+                  <Check size={32} className="text-green" />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold text-lg">Distribution lancée !</h3>
+                  <p className="text-lgray text-sm mt-1">
+                    Votre sortie est en cours de traitement sur {selectedPlatforms.length} plateforme{selectedPlatforms.length > 1 ? 's' : ''}.
+                    Délai estimé : 24–48h.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-1.5 justify-center mt-1">
+                  {selectedPlatforms.map((p) => (
+                    <span key={p} className="bg-green/10 text-green text-xs px-2.5 py-1 rounded-full">{p}</span>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setShowDistrib(false)}
+                  className="mt-2 text-sm text-muted hover:text-white cursor-pointer"
+                >
+                  Fermer
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-white">Tableau de bord</h1>
           <p className="text-lgray text-base mt-1">Bienvenue, {currentUser?.name || 'Artiste'}</p>
         </div>
-        <Button
-          variant="primary"
-          size="md"
-          onClick={() => navigate('/artist/new-ticket')}
-          className="px-5 py-2.5 rounded-xl hover:shadow-[0_0_20px_rgba(123,94,167,0.4)]"
-        >
-          <Plus size={15} />
-          Nouveau ticket
-        </Button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => { setShowDistrib(true); setDistribDone(false) }}
+            className="flex items-center gap-2 bg-teal/15 hover:bg-teal/25 text-teal border border-teal/30 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 active:scale-95 min-h-[44px]"
+          >
+            <Upload size={15} />
+            Distribuer
+          </button>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => navigate('/artist/new-ticket')}
+            className="px-5 py-2.5 rounded-xl hover:shadow-[0_0_20px_rgba(123,94,167,0.4)]"
+          >
+            <Plus size={15} />
+            Nouveau ticket
+          </Button>
+        </div>
       </div>
 
       {/* Balance card */}
