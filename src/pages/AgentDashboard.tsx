@@ -21,6 +21,7 @@ const categoryLabels: Record<Category, string> = {
 }
 
 const priorityOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
+const resolvedOrder: Record<string, number> = { in_progress: 0, pending: 0, resolved: 1, closed: 2 }
 
 function getArtistById(artistId: string) {
   return mockUsers.find((u) => u.id === artistId)
@@ -28,15 +29,18 @@ function getArtistById(artistId: string) {
 
 export default function AgentDashboard() {
   const navigate = useNavigate()
-  const { tickets, currentUser } = useTicketStore()
+  const { tickets, currentUser, readTickets, markRead } = useTicketStore()
 
   const openTickets     = tickets.filter((t) => t.status !== 'closed')
   const criticalTickets = tickets.filter((t) => t.priority === 'critical' && t.status !== 'closed')
   const assignedToMe    = tickets.filter((t) => t.assignedTo === currentUser?.id && t.status !== 'closed')
 
-  const sortedTickets = [...openTickets].sort(
-    (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
-  )
+  // Sort: resolved/closed last, then by priority within each group
+  const sortedTickets = [...tickets].sort((a, b) => {
+    const statusDiff = (resolvedOrder[a.status] ?? 0) - (resolvedOrder[b.status] ?? 0)
+    if (statusDiff !== 0) return statusDiff
+    return priorityOrder[a.priority] - priorityOrder[b.priority]
+  })
 
   const categories: Category[] = ['distribution', 'royalties', 'metadata', 'account']
   const categoryBreakdown = categories.map((cat) => ({
@@ -98,23 +102,34 @@ export default function AgentDashboard() {
         <div className="lg:col-span-2 bg-card border border-border rounded-2xl overflow-hidden">
           <div className="bg-surface px-5 py-4 border-b border-border flex items-center justify-between">
             <h2 className="text-base font-semibold text-white">
-              Tickets actifs
+              Tous les tickets
               <span className="text-xs text-muted ml-2 font-normal">({sortedTickets.length})</span>
             </h2>
-            <span className="text-xs text-muted">triés par priorité</span>
+            <span className="text-xs text-muted">résolus en bas</span>
           </div>
           <div>
             {sortedTickets.map((ticket) => {
               const artist = getArtistById(ticket.artistId)
               const isCritical = ticket.priority === 'critical'
+              const isResolved = ticket.status === 'resolved' || ticket.status === 'closed'
+              const lastMsg = ticket.messages[ticket.messages.length - 1]
+              const hasUnreadMsg = !!(lastMsg && lastMsg.role === 'artist')
+              const isRead = readTickets.includes(ticket.id)
+              const hasUnread = hasUnreadMsg && !isRead
               return (
                 <div
                   key={ticket.id}
-                  onClick={() => navigate(`/agent/tickets/${ticket.id}`)}
+                  onClick={() => { if (hasUnread) markRead(ticket.id); navigate(`/agent/tickets/${ticket.id}`) }}
                   className={`
                     flex items-center gap-3 px-4 py-3 border-b border-white/5 cursor-pointer
                     transition-colors duration-100 border-l-2
-                    ${isCritical ? 'border-l-red bg-red/3 hover:bg-red/6' : 'border-l-transparent hover:bg-white/3'}
+                    ${hasUnread
+                      ? 'border-l-pink bg-pink/5 hover:bg-pink/8'
+                      : isCritical
+                        ? 'border-l-red bg-red/3 hover:bg-red/6'
+                        : isResolved
+                          ? 'border-l-transparent opacity-50 hover:opacity-70 hover:bg-white/3'
+                          : 'border-l-transparent hover:bg-white/3'}
                   `}
                 >
                   {/* Avatar */}
@@ -130,7 +145,7 @@ export default function AgentDashboard() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-teal text-xs flex-shrink-0">{ticket.id}</span>
-                      <span className="text-white text-sm truncate">{ticket.subject}</span>
+                      <span className={`text-sm truncate ${hasUnread ? 'text-white font-medium' : 'text-lgray'}`}>{ticket.subject}</span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-muted text-xs">{artist?.name}</span>
