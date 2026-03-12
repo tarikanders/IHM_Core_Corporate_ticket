@@ -1,17 +1,13 @@
 import { useNavigate } from 'react-router-dom'
-import { Music, AlertTriangle } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { useTicketStore } from '../../store/useTicketStore'
 import { mockReleases } from '../../data/mockReleases'
 import Button from '../../components/ui/Button'
+import AlbumCover from '../../components/ui/AlbumCover'
 
 const platformLabels: Record<string, string> = {
   spotify: 'Spotify', appleMusic: 'Apple Music', deezer: 'Deezer', amazon: 'Amazon', tidal: 'Tidal',
 }
-
-const releaseGradients = [
-  'from-purple to-pink', 'from-teal to-blue-500', 'from-orange to-red',
-  'from-green to-teal', 'from-pink to-purple',
-]
 
 export default function MyReleasesPage() {
   const navigate = useNavigate()
@@ -27,12 +23,12 @@ export default function MyReleasesPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {artistReleases.map((release, i) => {
+        {artistReleases.map((release) => {
           const hasIssue = Object.values(release.platforms).some((v) => !v)
           return (
             <div key={release.id} className="bg-card border border-border rounded-2xl overflow-hidden hover:border-purple/30 transition-all">
-              <div className={`h-32 bg-gradient-to-br ${releaseGradients[i % releaseGradients.length]} flex items-center justify-center relative`}>
-                <Music size={40} className="text-white/40" />
+              <div className="relative aspect-square w-full">
+                <AlbumCover releaseId={release.id} />
                 {hasIssue && (
                   <div className="absolute top-3 right-3 w-7 h-7 rounded-full bg-orange/80 flex items-center justify-center">
                     <AlertTriangle size={14} className="text-white" />
