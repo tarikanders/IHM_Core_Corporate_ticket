@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom'
-import { Plus, TicketIcon, AlertTriangle, Disc, DollarSign, Bell, Music } from 'lucide-react'
+import { Plus, TicketIcon, AlertTriangle, Disc, DollarSign, Bell } from 'lucide-react'
 import { useTicketStore } from '../store/useTicketStore'
 import { mockReleases } from '../data/mockReleases'
 import StatCard from '../components/ui/StatCard'
 import TicketRow from '../components/tickets/TicketRow'
 import Button from '../components/ui/Button'
+import AlbumCover from '../components/ui/AlbumCover'
 
 const platformLabels: Record<string, string> = {
   spotify:    'Spotify',
@@ -14,11 +15,6 @@ const platformLabels: Record<string, string> = {
   tidal:      'Tidal',
 }
 
-const releaseGradients = [
-  'from-purple to-pink',
-  'from-teal to-blue-500',
-  'from-orange to-red',
-]
 
 const notifications = [
   { id: 1, message: 'Votre ticket TK-019 a été mis à jour par', highlight: 'Inès Morel.', time: 'il y a 2h', type: 'info', dot: 'bg-teal animate-pulse-dot' },
@@ -131,10 +127,10 @@ export default function ArtistDashboard() {
               </button>
             </div>
             <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {artistReleases.map((release, i) => (
+              {artistReleases.map((release) => (
                 <div key={release.id} className="bg-surface border border-border rounded-xl p-4 flex gap-4">
-                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${releaseGradients[i % 3]} flex items-center justify-center flex-shrink-0`}>
-                    <Music size={20} className="text-white" />
+                  <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
+                    <AlbumCover releaseId={release.id} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-semibold text-sm truncate">{release.title}</p>
