@@ -7,7 +7,9 @@ import { mockUsers } from '../data/mockUsers'
 interface TicketStore {
   tickets: Ticket[]
   currentUser: User | null
+  readTickets: string[]
   setUser: (userId: string) => void
+  markRead: (id: string) => void
   addTicket: (ticket: Omit<Ticket, 'id' | 'createdAt' | 'updatedAt' | 'messages' | 'tags'>) => void
   updateStatus: (id: string, status: Status) => void
   updatePriority: (id: string, priority: Priority) => void
@@ -22,10 +24,17 @@ export const useTicketStore = create<TicketStore>()(
     (set, get) => ({
       tickets: mockTickets,
       currentUser: null,
+      readTickets: [],
 
       setUser: (userId: string) => {
         const user = mockUsers.find((u) => u.id === userId) || null
         set({ currentUser: user })
+      },
+
+      markRead: (id) => {
+        set((state) => ({
+          readTickets: state.readTickets.includes(id) ? state.readTickets : [...state.readTickets, id],
+        }))
       },
 
       addTicket: (ticketData) => {
@@ -104,7 +113,7 @@ export const useTicketStore = create<TicketStore>()(
     {
       name: 'core-corporate-session',
       // Persist only the user session, not tickets (tickets reload from mock data)
-      partialize: (state) => ({ currentUser: state.currentUser }),
+      partialize: (state) => ({ currentUser: state.currentUser, readTickets: state.readTickets }),
     }
   )
 )
