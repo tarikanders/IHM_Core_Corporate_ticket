@@ -34,22 +34,22 @@ export default function FilterBar({ activeFilter, onFilterChange, searchQuery, o
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 px-4 py-2">
+      <div className="flex gap-1 px-3 py-2">
         {filters.map((f) => (
           <button
             key={f.value}
             onClick={() => onFilterChange(f.value)}
             className={`
-              px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer flex items-center gap-1.5
+              px-2.5 py-1 rounded-md text-xs font-medium cursor-pointer flex items-center gap-1.5 transition-colors duration-100
               ${activeFilter === f.value
                 ? 'bg-purple text-white'
-                : 'text-lgray hover:text-white hover:bg-white/5'
+                : 'text-muted hover:text-white hover:bg-white/5'
               }
             `}
           >
             {f.label}
             {counts[f.value] !== undefined && (
-              <span className={`text-xs rounded-full px-1.5 py-0.5 ${activeFilter === f.value ? 'bg-white/20' : 'bg-dgray text-muted'}`}>
+              <span className={`text-xs rounded-full px-1.5 py-0.5 leading-none ${activeFilter === f.value ? 'bg-white/20' : 'bg-dgray text-muted'}`}>
                 {counts[f.value]}
               </span>
             )}

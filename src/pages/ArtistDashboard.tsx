@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Plus, TicketIcon, AlertTriangle, Disc, DollarSign, Bell, ArrowDownToLine, MessageCircle } from 'lucide-react'
+import { Plus, TicketIcon, AlertTriangle, Disc, DollarSign, Bell, ArrowDownToLine, MessageCircle, } from 'lucide-react'
 import { useTicketStore } from '../store/useTicketStore'
 import { mockReleases } from '../data/mockReleases'
 import StatCard from '../components/ui/StatCard'
@@ -144,32 +144,13 @@ export default function ArtistDashboard() {
               {recentTickets.length === 0 ? (
                 <div className="p-8 text-center text-muted text-sm">Aucun ticket pour le moment.</div>
               ) : (
-                recentTickets.map((ticket) => {
-                  const hasUnread = ticket.messages.length > 0 &&
-                    ticket.messages[ticket.messages.length - 1].role === 'agent'
-                  return (
-                    <div key={ticket.id} className="relative group">
-                      <TicketRow
-                        ticket={ticket}
-                        onClick={() => navigate(`/artist/tickets/${ticket.id}`)}
-                      />
-                      {hasUnread && (
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); navigate(`/artist/tickets/${ticket.id}`) }}
-                            className="flex items-center gap-1.5 bg-pink/15 hover:bg-pink/25 text-pink border border-pink/30 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-150"
-                          >
-                            <MessageCircle size={12} />
-                            Répondre
-                          </button>
-                        </div>
-                      )}
-                      {hasUnread && (
-                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-pink rounded-r-full" />
-                      )}
-                    </div>
-                  )
-                })
+                recentTickets.map((ticket) => (
+                  <TicketRow
+                    key={ticket.id}
+                    ticket={ticket}
+                    onClick={() => navigate(`/artist/tickets/${ticket.id}`)}
+                  />
+                ))
               )}
             </div>
           </div>
