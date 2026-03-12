@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Plus, TicketIcon, AlertTriangle, Disc, DollarSign, Bell } from 'lucide-react'
+import { Plus, TicketIcon, AlertTriangle, Disc, DollarSign, Bell, ArrowDownToLine, MessageCircle } from 'lucide-react'
 import { useTicketStore } from '../store/useTicketStore'
 import { mockReleases } from '../data/mockReleases'
 import StatCard from '../components/ui/StatCard'
@@ -32,6 +32,12 @@ export default function ArtistDashboard() {
   const recentTickets = userTickets.slice(0, 4)
   const artistReleases = mockReleases.filter((r) => r.artistId === currentUser?.id).slice(0, 3)
 
+  // Unread: last message was from an agent
+  const unreadTickets = userTickets.filter((t) => {
+    if (t.messages.length === 0) return false
+    return t.messages[t.messages.length - 1].role === 'agent'
+  })
+
   return (
     <div className="min-h-screen bg-bg p-6 animate-fade-in">
       {/* Header */}
@@ -49,6 +55,32 @@ export default function ArtistDashboard() {
           <Plus size={15} />
           Nouveau ticket
         </Button>
+      </div>
+
+      {/* Balance card */}
+      <div className="bg-card border border-border rounded-2xl p-6 mb-6 animate-slide-up overflow-hidden relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-green/8 via-transparent to-teal/5 pointer-events-none" />
+        <div className="relative flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <p className="text-muted text-xs font-bold uppercase tracking-wider mb-1">Solde disponible</p>
+            <p className="text-5xl font-bold text-white tracking-tight">
+              {currentUser?.balance !== undefined
+                ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(currentUser.balance)
+                : '—'}
+            </p>
+            <p className="text-lgray text-sm mt-2 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-green inline-block" />
+              Royalties disponibles au retrait
+            </p>
+          </div>
+          <button
+            onClick={() => {}}
+            className="flex items-center gap-2 bg-green/15 hover:bg-green/25 text-green border border-green/30 rounded-xl px-5 py-3 font-semibold text-sm transition-all duration-150 active:scale-95 min-h-[44px]"
+          >
+            <ArrowDownToLine size={16} />
+            Retirer les fonds
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -92,7 +124,15 @@ export default function ArtistDashboard() {
         <div className="lg:col-span-2 animate-slide-up">
           <div className="bg-card border border-border rounded-2xl overflow-hidden">
             <div className="flex items-center justify-between bg-surface px-5 py-4 border-b border-border">
-              <h2 className="text-lg font-semibold text-white">Tickets récents</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold text-white">Tickets récents</h2>
+                {unreadTickets.length > 0 && (
+                  <span className="flex items-center gap-1 bg-pink/15 text-pink border border-pink/30 text-xs font-semibold px-2 py-0.5 rounded-full">
+                    <MessageCircle size={11} />
+                    {unreadTickets.length} non lu{unreadTickets.length > 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
               <button
                 onClick={() => navigate('/artist/tickets')}
                 className="text-sm text-purple hover:text-purple-light cursor-pointer"
@@ -104,13 +144,32 @@ export default function ArtistDashboard() {
               {recentTickets.length === 0 ? (
                 <div className="p-8 text-center text-muted text-sm">Aucun ticket pour le moment.</div>
               ) : (
-                recentTickets.map((ticket) => (
-                  <TicketRow
-                    key={ticket.id}
-                    ticket={ticket}
-                    onClick={() => navigate(`/artist/tickets/${ticket.id}`)}
-                  />
-                ))
+                recentTickets.map((ticket) => {
+                  const hasUnread = ticket.messages.length > 0 &&
+                    ticket.messages[ticket.messages.length - 1].role === 'agent'
+                  return (
+                    <div key={ticket.id} className="relative group">
+                      <TicketRow
+                        ticket={ticket}
+                        onClick={() => navigate(`/artist/tickets/${ticket.id}`)}
+                      />
+                      {hasUnread && (
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); navigate(`/artist/tickets/${ticket.id}`) }}
+                            className="flex items-center gap-1.5 bg-pink/15 hover:bg-pink/25 text-pink border border-pink/30 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-150"
+                          >
+                            <MessageCircle size={12} />
+                            Répondre
+                          </button>
+                        </div>
+                      )}
+                      {hasUnread && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-pink rounded-r-full" />
+                      )}
+                    </div>
+                  )
+                })
               )}
             </div>
           </div>

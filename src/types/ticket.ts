@@ -32,6 +32,7 @@ export interface User {
   city: string
   avatar: string
   color: string
+  balance?: number
 }
 
 export interface Release {
