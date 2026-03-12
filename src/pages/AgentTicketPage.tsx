@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Send, Tag, X, BookOpen, ExternalLink, Lock, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Send, X, Lock, CheckCircle } from 'lucide-react'
 import { useTicketStore } from '../store/useTicketStore'
 import { mockUsers } from '../data/mockUsers'
 import { mockReleases } from '../data/mockReleases'
@@ -28,11 +28,6 @@ const priorities: { value: Priority; label: string; activeBg: string }[] = [
   { value: 'low',      label: 'Faible',   activeBg: 'bg-lgray/20 border-lgray text-lgray' },
 ]
 
-const knowledgeLinks = [
-  { label: 'Guide distribution multi-plateformes', href: '#' },
-  { label: 'FAQ royalties et paiements', href: '#' },
-  { label: 'Procédure de correction métadonnées', href: '#' },
-]
 
 const agentTagOptions = ['deezer', 'spotify', 'urgent', 'royalties', 'metadata', 'distribution', 'account', 'isrc', 'upc']
 
@@ -269,16 +264,18 @@ export default function AgentTicketPage() {
         </div>
 
         {/* Col 3: Controls */}
-        <div className="w-[30%] min-w-52 overflow-y-auto bg-surface p-5 flex flex-col gap-5">
+        <div className="w-[26%] min-w-48 overflow-y-auto bg-surface p-4 flex flex-col gap-5">
+
           {/* Status */}
           <div>
-            <h3 className="text-xs text-muted uppercase tracking-widest mb-3 font-bold">Statut</h3>
-            <div className="grid grid-cols-2 gap-2">
+            <p className="text-xs text-muted mb-2">Statut</p>
+            <div className="grid grid-cols-2 gap-1.5">
               {statuses.map((s) => (
                 <button
                   key={s.value}
                   onClick={() => handleStatusChange(s.value)}
-                  className={`py-2 px-2 rounded-xl text-xs font-semibold cursor-pointer border ${ticket.status === s.value ? s.activeBg : 'border-border text-lgray bg-dgray hover:border-lgray/40 hover:text-white'}`}
+                  className={`py-1.5 px-2 rounded-lg text-xs font-medium cursor-pointer border transition-colors duration-100
+                    ${ticket.status === s.value ? s.activeBg : 'border-transparent text-muted bg-dgray/50 hover:text-white hover:bg-dgray'}`}
                 >
                   {s.label}
                 </button>
@@ -288,13 +285,14 @@ export default function AgentTicketPage() {
 
           {/* Priority */}
           <div>
-            <h3 className="text-xs text-muted uppercase tracking-widest mb-3 font-bold">Priorité</h3>
-            <div className="grid grid-cols-2 gap-2">
+            <p className="text-xs text-muted mb-2">Priorité</p>
+            <div className="grid grid-cols-2 gap-1.5">
               {priorities.map((p) => (
                 <button
                   key={p.value}
                   onClick={() => { updatePriority(ticket.id, p.value); showToast('Priorité mise à jour', `→ ${p.label}`) }}
-                  className={`py-2 px-2 rounded-xl text-xs font-semibold cursor-pointer border ${ticket.priority === p.value ? p.activeBg : 'border-border text-lgray bg-dgray hover:border-lgray/40 hover:text-white'}`}
+                  className={`py-1.5 px-2 rounded-lg text-xs font-medium cursor-pointer border transition-colors duration-100
+                    ${ticket.priority === p.value ? p.activeBg : 'border-transparent text-muted bg-dgray/50 hover:text-white hover:bg-dgray'}`}
                 >
                   {p.label}
                 </button>
@@ -304,19 +302,20 @@ export default function AgentTicketPage() {
 
           {/* Assign */}
           <div>
-            <h3 className="text-xs text-muted uppercase tracking-widest mb-3 font-bold">Assigner à</h3>
-            <div className="flex flex-col gap-2">
+            <p className="text-xs text-muted mb-2">Assigné à</p>
+            <div className="flex flex-col gap-1">
               {agents.map((agent) => (
                 <button
                   key={agent.id}
                   onClick={() => { assignTicket(ticket.id, agent.id); showToast('Ticket réassigné', `→ ${agent.name}`) }}
-                  className={`flex items-center gap-2 p-2 rounded-xl border text-left cursor-pointer text-xs ${ticket.assignedTo === agent.id ? 'border-purple bg-purple/10 text-white' : 'border-border text-lgray bg-dgray hover:border-purple/30 hover:text-white'}`}
+                  className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-left cursor-pointer text-xs transition-colors duration-100
+                    ${ticket.assignedTo === agent.id ? 'bg-purple/15 text-white' : 'text-lgray hover:bg-white/5 hover:text-white'}`}
                 >
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0" style={{ backgroundColor: agent.color }}>
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0" style={{ backgroundColor: agent.color }}>
                     {agent.avatar}
                   </div>
-                  {agent.name}
-                  {ticket.assignedTo === agent.id && <span className="ml-auto text-purple">✓</span>}
+                  <span className="flex-1">{agent.name}</span>
+                  {ticket.assignedTo === agent.id && <span className="text-purple">✓</span>}
                 </button>
               ))}
             </div>
@@ -324,49 +323,28 @@ export default function AgentTicketPage() {
 
           {/* Tags */}
           <div>
-            <h3 className="text-xs text-muted uppercase tracking-widest mb-3 font-bold">Tags</h3>
-            <div className="flex flex-wrap gap-1.5 mb-3">
+            <p className="text-xs text-muted mb-2">Tags</p>
+            <div className="flex flex-wrap gap-1 mb-2">
               {ticket.tags.map((tag) => (
-                <span key={tag} className="flex items-center gap-1 text-xs bg-dgray text-lgray rounded-full px-2.5 py-1 border border-border">
+                <span key={tag} className="flex items-center gap-1 text-xs bg-purple/15 text-purple rounded-full px-2 py-0.5">
                   {tag}
-                  <button onClick={() => removeTag(ticket.id, tag)} className="hover:text-red cursor-pointer ml-0.5">
-                    <X size={10} />
+                  <button onClick={() => removeTag(ticket.id, tag)} className="hover:text-red cursor-pointer">
+                    <X size={9} />
                   </button>
                 </span>
               ))}
+              {ticket.tags.length === 0 && <span className="text-xs text-muted italic">Aucun</span>}
             </div>
-            <div className="flex flex-wrap gap-1">
+            <select
+              onChange={(e) => { if (e.target.value) { handleAddTag(e.target.value); e.target.value = '' } }}
+              defaultValue=""
+              className="w-full bg-dgray border border-border rounded-lg px-2.5 py-1.5 text-xs text-lgray outline-none focus:border-purple/40 cursor-pointer"
+            >
+              <option value="" disabled>+ Ajouter un tag…</option>
               {agentTagOptions.filter((t) => !ticket.tags.includes(t)).map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => handleAddTag(tag)}
-                  className="flex items-center gap-1 text-xs text-muted hover:text-white rounded-full px-2.5 py-1 border border-dashed border-border hover:border-solid hover:border-border/70 cursor-pointer"
-                >
-                  <Tag size={9} />
-                  {tag}
-                </button>
+                <option key={tag} value={tag}>{tag}</option>
               ))}
-            </div>
-          </div>
-
-          {/* Knowledge base */}
-          <div>
-            <h3 className="text-xs text-muted uppercase tracking-widest mb-3 font-bold flex items-center gap-1.5">
-              <BookOpen size={12} />
-              Base de connaissances
-            </h3>
-            <div className="flex flex-col">
-              {knowledgeLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="flex items-center justify-between py-2 text-teal text-sm hover:text-white border-b border-border/40 last:border-0 group"
-                >
-                  <span>{link.label}</span>
-                  <ExternalLink size={11} className="text-muted group-hover:text-teal flex-shrink-0 ml-2" />
-                </a>
-              ))}
-            </div>
+            </select>
           </div>
         </div>
       </div>

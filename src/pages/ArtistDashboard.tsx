@@ -92,6 +92,7 @@ export default function ArtistDashboard() {
           iconBg="bg-purple/15"
           icon={<TicketIcon size={20} className="text-purple" />}
           trend="↑ +2 cette semaine"
+          onClick={() => navigate('/artist/tickets')}
         />
         <StatCard
           value={urgentTickets.length}
@@ -100,6 +101,7 @@ export default function ArtistDashboard() {
           iconBg="bg-red/15"
           icon={<AlertTriangle size={20} className="text-red" />}
           pulse={urgentTickets.length > 0}
+          onClick={() => navigate('/artist/tickets')}
         />
         <StatCard
           value={artistReleases.length}
@@ -107,6 +109,7 @@ export default function ArtistDashboard() {
           gradient="from-teal to-green"
           iconBg="bg-teal/15"
           icon={<Disc size={20} className="text-teal" />}
+          onClick={() => navigate('/artist/releases')}
         />
         <StatCard
           value="€342"

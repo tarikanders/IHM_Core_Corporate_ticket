@@ -1,3 +1,4 @@
+import { MessageCircle, CheckCircle2 } from 'lucide-react'
 import type { Ticket } from '../../types/ticket'
 import { useTicketStore } from '../../store/useTicketStore'
 import Badge from '../ui/Badge'
@@ -22,7 +23,13 @@ export default function TicketRow({ ticket, selected = false, onClick }: TicketR
   const isArchived = ticket.status === 'resolved' || ticket.status === 'closed'
 
   const lastMsg = ticket.messages[ticket.messages.length - 1]
-  const hasUnread = !!(lastMsg && currentUser && lastMsg.role !== currentUser.role)
+
+  // État de conversation :
+  // - hasUnread : dernier message est de l'autre rôle → réponse en attente
+  // - hasReplied : dernier message est du même rôle que moi → j'ai répondu en dernier
+  // - noMessages : ticket sans conversation encore
+  const hasUnread  = !!(lastMsg && currentUser && lastMsg.role !== currentUser.role)
+  const hasReplied = !!(lastMsg && currentUser && lastMsg.role === currentUser.role && ticket.messages.length > 0)
 
   return (
     <div
@@ -35,14 +42,16 @@ export default function TicketRow({ ticket, selected = false, onClick }: TicketR
           ? 'bg-purple/8 border-l-purple'
           : hasUnread
             ? 'bg-pink/5 hover:bg-pink/8 border-l-pink'
-            : 'hover:bg-white/3 border-l-transparent'
+            : hasReplied
+              ? 'hover:bg-white/3 border-l-green/40'
+              : 'hover:bg-white/3 border-l-transparent'
         }
       `}
     >
       {/* Line 1: ID · Subject · Status pill */}
       <div className="flex items-center gap-2 min-w-0">
         <span className="font-mono text-teal text-xs flex-shrink-0 w-14">{ticket.id}</span>
-        <span className={`text-sm font-medium truncate flex-1 min-w-0 ${isArchived ? 'text-lgray' : 'text-white'}`}>
+        <span className={`text-sm font-medium truncate flex-1 min-w-0 ${isArchived ? 'text-lgray' : hasUnread ? 'text-white' : 'text-lgray'}`}>
           {ticket.subject}
         </span>
         <Badge
@@ -52,18 +61,28 @@ export default function TicketRow({ ticket, selected = false, onClick }: TicketR
         />
       </div>
 
-      {/* Line 2: Category · Priority · Time [ · Répondre] */}
-      <div className="flex items-center gap-1.5 mt-1 pl-16">
-        <Badge category={ticket.category} variant="inline" />
-        <span className="text-muted text-xs">·</span>
-        <Badge priority={ticket.priority} variant="inline" />
-        <span className="text-muted text-xs">·</span>
-        <span className="text-muted text-xs">{timeAgo(ticket.updatedAt)}</span>
+      {/* Line 2: meta + conversation state */}
+      <div className="flex items-center justify-between mt-1 pl-16">
+        <div className="flex items-center gap-1.5">
+          <Badge category={ticket.category} variant="inline" />
+          <span className="text-muted text-xs">·</span>
+          <Badge priority={ticket.priority} variant="inline" />
+          <span className="text-muted text-xs">·</span>
+          <span className="text-muted text-xs">{timeAgo(ticket.updatedAt)}</span>
+        </div>
+
+        {/* Conversation state indicator */}
         {hasUnread && (
-          <>
-            <span className="text-muted text-xs">·</span>
-            <span className="text-pink text-xs font-semibold">Répondre →</span>
-          </>
+          <span className="flex items-center gap-1 text-pink text-xs font-semibold">
+            <MessageCircle size={11} />
+            Répondre
+          </span>
+        )}
+        {hasReplied && !hasUnread && (
+          <span className="flex items-center gap-1 text-green text-xs">
+            <CheckCircle2 size={11} />
+            Répondu
+          </span>
         )}
       </div>
     </div>
