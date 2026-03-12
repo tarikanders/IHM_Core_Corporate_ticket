@@ -39,13 +39,35 @@ export default function Navbar({ role }: NavbarProps) {
     <nav className="bg-surface border-b border-white/5 px-6 h-16 flex items-center gap-8 sticky top-0 z-50 backdrop-blur-sm">
       {/* Logo */}
       <div className="flex items-center gap-2.5 flex-shrink-0">
-        <div
-          className="w-9 h-9 bg-gradient-to-br from-purple to-pink rounded-xl flex items-center justify-center text-white font-bold text-sm"
-          style={{ boxShadow: '0 0 12px rgba(123,94,167,0.4)' }}
+        <svg
+          width="36" height="36" viewBox="0 0 36 36" fill="none"
+          style={{ filter: 'drop-shadow(0 0 8px rgba(224,64,251,0.35))' }}
         >
-          CC
+          <defs>
+            <linearGradient id="ccg" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#7B5EA7" />
+              <stop offset="100%" stopColor="#E040FB" />
+            </linearGradient>
+          </defs>
+          {/* Background */}
+          <rect width="36" height="36" rx="9" fill="url(#ccg)" />
+          {/* Outer C arc */}
+          <path
+            d="M23 8.5C17 8.5 12 12.9 12 18s5 9.5 11 9.5"
+            stroke="white" strokeWidth="2.8" strokeLinecap="round" fill="none"
+          />
+          {/* Inner C arc — echo / depth */}
+          <path
+            d="M22 12.5C18.5 12.5 16 15 16 18s2.5 5.5 6 5.5"
+            stroke="rgba(255,255,255,0.55)" strokeWidth="2" strokeLinecap="round" fill="none"
+          />
+          {/* Dot accent — note / signal */}
+          <circle cx="23.5" cy="27.5" r="1.8" fill="white" opacity="0.9" />
+        </svg>
+        <div className="hidden sm:flex flex-col leading-none">
+          <span className="font-bold text-white text-sm tracking-wide">CORE</span>
+          <span className="font-medium text-purple text-xs tracking-widest">CORPORATE</span>
         </div>
-        <span className="font-semibold text-white text-base hidden sm:block">Core Corporate</span>
       </div>
 
       {/* Nav links */}
