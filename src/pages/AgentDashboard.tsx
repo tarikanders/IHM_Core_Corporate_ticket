@@ -24,7 +24,7 @@ const categoryLabels: Record<Category, string> = {
 const priorityOrder: Record<Priority, number> = { critical: 0, high: 1, medium: 2, low: 3 }
 const statusOrder:   Record<Status, number>   = { in_progress: 0, pending: 1, resolved: 2, closed: 3 }
 
-type SortMode = 'priority' | 'date_desc' | 'status'
+type SortMode = 'priority' | 'date_desc' | 'status' | 'category'
 
 function getArtistById(artistId: string) {
   return mockUsers.find((u) => u.id === artistId)
@@ -33,7 +33,8 @@ function getArtistById(artistId: string) {
 export default function AgentDashboard() {
   const navigate = useNavigate()
   const { tickets, currentUser, readTickets, markRead } = useTicketStore()
-  const [sortMode, setSortMode] = useState<SortMode>('priority')
+  const [sortMode, setSortMode]         = useState<SortMode>('priority')
+  const [categoryFilter, setCategoryFilter] = useState<Category | 'all'>('all')
 
   const openTickets     = tickets.filter((t) => t.status !== 'closed')
   const criticalTickets = tickets.filter((t) => t.priority === 'critical' && t.status !== 'closed')
@@ -45,13 +46,18 @@ export default function AgentDashboard() {
     ? (withFeedback.reduce((s, t) => s + t.feedback!.rating, 0) / withFeedback.length).toFixed(1)
     : '4.7'
 
-  const sortedTickets = [...tickets].sort((a, b) => {
+  const filteredTickets = categoryFilter === 'all'
+    ? tickets
+    : tickets.filter((t) => t.category === categoryFilter)
+
+  const sortedTickets = [...filteredTickets].sort((a, b) => {
     const aResolved = a.status === 'resolved' || a.status === 'closed' ? 1 : 0
     const bResolved = b.status === 'resolved' || b.status === 'closed' ? 1 : 0
     if (aResolved !== bResolved) return aResolved - bResolved
     switch (sortMode) {
       case 'date_desc': return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       case 'status':    return statusOrder[a.status] - statusOrder[b.status]
+      case 'category':  return a.category.localeCompare(b.category)
       default:          return priorityOrder[a.priority] - priorityOrder[b.priority]
     }
   })
@@ -67,7 +73,7 @@ export default function AgentDashboard() {
 
   const now = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
-  const sortLabels: Record<SortMode, string> = { priority: 'Priorité', date_desc: 'Date', status: 'Statut' }
+  const sortLabels: Record<SortMode, string> = { priority: 'Priorité', date_desc: 'Date', status: 'Statut', category: 'Catégorie' }
 
   return (
     <div className="min-h-screen bg-bg p-6 animate-fade-in">
@@ -92,7 +98,6 @@ export default function AgentDashboard() {
           gradient="from-red to-orange"
           iconBg="bg-red/15"
           icon={<AlertTriangle size={20} className="text-red" aria-hidden="true" />}
-          pulse={criticalTickets.length > 0}
           onClick={() => criticalTickets[0] && navigate(`/agent/tickets/${criticalTickets[0].id}`)}
         />
         <StatCard
@@ -116,15 +121,15 @@ export default function AgentDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 animate-slide-up">
         {/* Tickets list */}
         <div className="lg:col-span-2 bg-card border border-dgray rounded-2xl overflow-hidden">
-          <div className="bg-surface px-5 py-4 border-b border-dgray flex items-center justify-between">
+          {/* Header : titre + tri */}
+          <div className="bg-surface px-5 py-3 border-b border-dgray flex items-center justify-between">
             <h2 className="text-base font-semibold text-white">
-              Tous les tickets
+              Tickets
               <span className="text-xs text-muted ml-2 font-normal">({sortedTickets.length})</span>
             </h2>
-            {/* Sort */}
             <div className="flex items-center gap-1 text-xs">
               <ArrowUpDown size={11} className="text-muted" aria-hidden="true" />
-              {(['priority', 'date_desc', 'status'] as SortMode[]).map((m) => (
+              {(['priority', 'date_desc', 'status', 'category'] as SortMode[]).map((m) => (
                 <button
                   key={m}
                   onClick={() => setSortMode(m)}
@@ -136,6 +141,27 @@ export default function AgentDashboard() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Filtre par catégorie */}
+          <div className="grid grid-cols-5 border-b border-dgray">
+            {([['all', 'Tous', '#9090A8'], ...categories.map((c) => [c, categoryLabels[c], categoryColors[c]])] as [string, string, string][]).map(([val, label, color]) => {
+              const active = categoryFilter === val
+              const count = val === 'all' ? tickets.length : tickets.filter((t) => t.category === val).length
+              return (
+                <button
+                  key={val}
+                  onClick={() => setCategoryFilter(val as Category | 'all')}
+                  aria-pressed={active}
+                  className={`relative flex flex-col items-center py-2.5 gap-0.5 text-xs cursor-pointer transition-colors duration-100 border-b-2
+                    ${active ? 'border-b-2 text-white' : 'border-transparent text-muted hover:text-lgray'}`}
+                  style={{ borderColor: active ? color : undefined }}
+                >
+                  <span className="font-medium">{label}</span>
+                  <span className="text-[10px] font-bold" style={{ color: active ? color : undefined }}>{count}</span>
+                </button>
+              )
+            })}
           </div>
           <div>
             {sortedTickets.map((ticket) => {
