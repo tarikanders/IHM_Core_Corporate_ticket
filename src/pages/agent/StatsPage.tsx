@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import { useTicketStore } from '../../store/useTicketStore'
 import { mockUsers } from '../../data/mockUsers'
 import type { Category, Priority } from '../../types/ticket'
+
+type Period = 'week' | 'month' | 'all'
 
 const categoryColors: Record<Category, string> = {
   distribution: '#00BCD4',
@@ -44,6 +47,7 @@ function StarDisplay({ rating }: { rating: number }) {
 
 export default function StatsPage() {
   const { tickets } = useTicketStore()
+  const [period, setPeriod] = useState<Period>('all')
 
   const total    = tickets.length
   const resolved = tickets.filter((t) => t.status === 'resolved' || t.status === 'closed').length
@@ -64,9 +68,25 @@ export default function StatsPage() {
 
   return (
     <div className="min-h-screen bg-bg p-6 animate-fade-in">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Statistiques</h1>
-        <p className="text-lgray text-sm mt-1">Vue d'ensemble des performances support</p>
+      <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-white">Statistiques</h1>
+          <p className="text-lgray text-sm mt-1">Vue d'ensemble des performances support</p>
+        </div>
+        {/* Period filter — visuel uniquement (mockup) */}
+        <div className="flex items-center gap-1 bg-card border border-dgray rounded-xl p-1">
+          {([['week', 'Cette semaine'], ['month', 'Ce mois'], ['all', 'Tout']] as [Period, string][]).map(([v, label]) => (
+            <button
+              key={v}
+              onClick={() => setPeriod(v)}
+              aria-pressed={period === v}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all duration-150
+                ${period === v ? 'bg-purple text-white shadow-sm' : 'text-muted hover:text-white hover:bg-white/5'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* KPIs */}

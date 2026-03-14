@@ -121,6 +121,7 @@ export default function TicketForm({ onSubmit, artistId, loading = false }: Tick
               key={cat.value}
               type="button"
               onClick={() => handleCategorySelect(cat.value)}
+              aria-pressed={category === cat.value}
               className={`
                 flex flex-col items-start gap-3 p-4 rounded-xl border min-h-28 text-left cursor-pointer relative
                 ${category === cat.value
@@ -185,30 +186,35 @@ export default function TicketForm({ onSubmit, artistId, loading = false }: Tick
           </h3>
 
           <div>
-            <label className="text-white text-sm font-medium mb-2 block">
-              Sujet <span className="text-red">*</span>
+            <label htmlFor="ticket-subject" className="text-white text-sm font-medium mb-2 block">
+              Sujet <span className="text-red" aria-hidden="true">*</span>
             </label>
             <input
+              id="ticket-subject"
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Décrivez brièvement votre problème..."
+              aria-required="true"
+              aria-describedby={errors.subject ? 'ticket-subject-error' : undefined}
               className={`bg-dgray border rounded-xl px-4 py-3 text-sm text-white w-full placeholder:text-muted outline-none focus:border-purple focus:ring-1 focus:ring-purple/50 ${errors.subject ? 'border-red' : 'border-border'}`}
             />
-            {errors.subject && <span className="text-xs text-red mt-1.5 block">{errors.subject}</span>}
+            {errors.subject && <span id="ticket-subject-error" className="text-xs text-red mt-1.5 block" role="alert">{errors.subject}</span>}
           </div>
 
           <div>
-            <label className="text-white text-sm font-medium mb-2 block">Description</label>
+            <label htmlFor="ticket-description" className="text-white text-sm font-medium mb-2 block">Description</label>
             <textarea
+              id="ticket-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Donnez plus de détails sur votre problème..."
               rows={4}
               maxLength={500}
+              aria-describedby="ticket-desc-count"
               className="bg-dgray border border-border rounded-xl px-4 py-3 text-sm text-white w-full placeholder:text-muted outline-none focus:border-purple focus:ring-1 focus:ring-purple/50 resize-none min-h-32"
             />
-            <p className="text-muted text-xs text-right mt-1">{description.length} / 500</p>
+            <p id="ticket-desc-count" className="text-muted text-xs text-right mt-1" aria-live="polite">{description.length} / 500</p>
           </div>
 
           {/* Attachment */}
@@ -232,6 +238,7 @@ export default function TicketForm({ onSubmit, artistId, loading = false }: Tick
               <button
                 key={p.value}
                 type="button"
+                aria-pressed={priority === p.value}
                 onClick={() => { setPriority(p.value); setErrors((e) => ({ ...e, priority: '' })) }}
                 className={`flex flex-col gap-1 p-3 rounded-xl border text-left cursor-pointer ${priority === p.value ? `${p.border} ${p.bg}` : 'border-border bg-dgray/20 hover:border-border/70'}`}
               >

@@ -22,6 +22,7 @@ export default function TicketRow({ ticket, selected = false, onClick }: TicketR
   const hasUnread = hasUnreadMsg && !isRead
 
   const hasReplied = !!(lastMsg && currentUser && lastMsg.role === currentUser.role)
+  const isClosed = ticket.status === 'closed'
 
   const handleClick = () => {
     if (hasUnread) markRead(ticket.id)
@@ -35,20 +36,22 @@ export default function TicketRow({ ticket, selected = false, onClick }: TicketR
       className={`
         relative px-4 py-2.5 border-b border-white/5 cursor-pointer
         transition-colors duration-100 border-l-2
-        ${selected
-          ? 'bg-purple/8 border-l-purple'
-          : hasUnread
-            ? 'bg-pink/5 hover:bg-pink/8 border-l-pink'
-            : hasReplied
-              ? 'hover:bg-white/3 border-l-green/40'
-              : 'hover:bg-white/3 border-l-transparent'
+        ${isClosed
+          ? 'opacity-50 border-l-transparent hover:opacity-70 hover:bg-white/3'
+          : selected
+            ? 'bg-purple/8 border-l-purple'
+            : hasUnread
+              ? 'bg-pink/5 hover:bg-pink/8 border-l-pink'
+              : hasReplied
+                ? 'hover:bg-white/3 border-l-green/40'
+                : 'hover:bg-white/3 border-l-transparent'
         }
       `}
     >
       {/* Line 1: ID · Subject */}
       <div className="flex items-center gap-2 min-w-0">
         <span className="font-mono text-teal text-xs flex-shrink-0 w-14">{ticket.id}</span>
-        <span className={`text-sm font-medium truncate flex-1 min-w-0 ${hasUnread ? 'text-white' : 'text-lgray'}`}>
+        <span className={`text-sm font-medium truncate flex-1 min-w-0 ${isClosed ? 'line-through text-muted' : hasUnread ? 'text-white' : 'text-lgray'}`}>
           {ticket.subject}
         </span>
       </div>

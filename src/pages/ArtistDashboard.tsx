@@ -179,28 +179,34 @@ export default function ArtistDashboard() {
         </div>
       </div>
 
-      {/* Balance card */}
-      <div className="bg-card border border-border rounded-2xl p-6 mb-6 animate-slide-up overflow-hidden relative">
+      {/* Balance card — compact */}
+      <div className="bg-card border border-border rounded-2xl px-5 py-4 mb-6 animate-slide-up overflow-hidden relative">
         <div className="absolute inset-0 bg-gradient-to-br from-green/8 via-transparent to-teal/5 pointer-events-none" />
-        <div className="relative flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <p className="text-muted text-xs font-bold uppercase tracking-wider mb-1">Solde disponible</p>
-            <p className="text-5xl font-bold text-white tracking-tight">
-              {currentUser?.balance !== undefined
-                ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(currentUser.balance)
-                : '—'}
-            </p>
-            <p className="text-lgray text-sm mt-2 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-green inline-block" />
-              Royalties disponibles au retrait
-            </p>
+        <div className="relative flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-green/15 flex items-center justify-center flex-shrink-0">
+              <DollarSign size={18} className="text-green" />
+            </div>
+            <div>
+              <p className="text-muted text-xs font-bold uppercase tracking-wider">Solde disponible</p>
+              <p className="text-2xl font-bold text-white tracking-tight leading-tight">
+                {currentUser?.balance !== undefined
+                  ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(currentUser.balance)
+                  : '—'}
+              </p>
+            </div>
+            <span className="flex items-center gap-1.5 text-green text-xs ml-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-green inline-block" />
+              Royalties disponibles
+            </span>
           </div>
           <button
             onClick={() => {}}
-            className="flex items-center gap-2 bg-green/15 hover:bg-green/25 text-green border border-green/30 rounded-xl px-5 py-3 font-semibold text-sm transition-all duration-150 active:scale-95 min-h-[44px]"
+            aria-label="Retirer les fonds"
+            className="flex items-center gap-2 bg-green/15 hover:bg-green/25 text-green border border-green/30 rounded-xl px-4 py-2 font-semibold text-sm transition-all duration-150 active:scale-95 min-h-[44px]"
           >
-            <ArrowDownToLine size={16} />
-            Retirer les fonds
+            <ArrowDownToLine size={15} />
+            Retirer
           </button>
         </div>
       </div>
@@ -302,12 +308,23 @@ export default function ArtistDashboard() {
                     <p className="text-muted text-xs">{release.type}</p>
                     <div className="mt-2 flex flex-col gap-1">
                       {Object.entries(release.platforms).map(([platform, available]) => (
-                        <div key={platform} className="flex items-center gap-1.5 text-xs">
-                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${available ? 'bg-green' : 'bg-red'}`} />
-                          <span className={available ? 'text-lgray' : 'text-red'}>
-                            {platformLabels[platform]}
-                            {!available && ' ⚠'}
-                          </span>
+                        <div key={platform} className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${available ? 'bg-green' : 'bg-red'}`} />
+                            <span className={available ? 'text-lgray' : 'text-red font-medium'}>
+                              {platformLabels[platform]}
+                              {!available && <span className="ml-1 text-orange">⚠</span>}
+                            </span>
+                          </div>
+                          {!available && (
+                            <button
+                              onClick={() => navigate('/artist/new-ticket')}
+                              className="ml-3.5 text-xs text-purple hover:underline cursor-pointer leading-none"
+                              aria-label={`Signaler un problème sur ${platformLabels[platform]}`}
+                            >
+                              Signaler →
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
