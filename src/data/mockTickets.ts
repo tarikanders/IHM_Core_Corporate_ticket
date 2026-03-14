@@ -84,6 +84,7 @@ export const mockTickets: Ticket[] = [
         createdAt: '2024-05-22T10:00:00.000Z',
       },
     ],
+    feedback: { rating: 5, comment: "Problème réglé rapidement, merci !", submittedAt: '2024-05-22T12:00:00.000Z' },
   },
   {
     id: 'TK-014',
@@ -95,6 +96,7 @@ export const mockTickets: Ticket[] = [
     createdAt: '2024-05-15T09:00:00.000Z',
     updatedAt: '2024-05-18T16:00:00.000Z',
     tags: ['royalties', 'info'],
+    feedback: { rating: 4, comment: "Réponse claire et détaillée.", submittedAt: '2024-05-19T08:00:00.000Z' },
     messages: [
       {
         author: 'user-lea',
@@ -120,6 +122,7 @@ export const mockTickets: Ticket[] = [
     createdAt: '2024-05-10T11:30:00.000Z',
     updatedAt: '2024-05-14T09:00:00.000Z',
     tags: ['apple-music', 'distribution'],
+    feedback: { rating: 5, comment: "Super réactif, tout est rentré dans l'ordre.", submittedAt: '2024-05-14T15:00:00.000Z' },
     messages: [
       {
         author: 'agent-ines',
@@ -227,6 +230,7 @@ export const mockTickets: Ticket[] = [
     createdAt: '2024-04-15T10:00:00.000Z',
     updatedAt: '2024-04-17T14:00:00.000Z',
     tags: ['metadata', 'tidal'],
+    feedback: { rating: 3, comment: "Ça a pris un peu de temps mais c'est réglé.", submittedAt: '2024-04-18T10:00:00.000Z' },
     messages: [
       {
         author: 'agent-ines',
@@ -258,6 +262,7 @@ export const mockTickets: Ticket[] = [
     createdAt: '2024-04-05T14:00:00.000Z',
     updatedAt: '2024-04-08T11:00:00.000Z',
     tags: ['distribution', 'géo-restrictions'],
+    feedback: { rating: 4, comment: "Problème résolu efficacement.", submittedAt: '2024-04-09T09:00:00.000Z' },
     messages: [
       {
         author: 'user-lea',

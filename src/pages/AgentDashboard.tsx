@@ -1,10 +1,11 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, TicketIcon, UserCheck, Star } from 'lucide-react'
+import { AlertTriangle, TicketIcon, UserCheck, Star, ArrowUpDown } from 'lucide-react'
 import { useTicketStore } from '../store/useTicketStore'
 import { mockUsers } from '../data/mockUsers'
 import StatCard from '../components/ui/StatCard'
 import Badge from '../components/ui/Badge'
-import type { Category } from '../types/ticket'
+import type { Category, Priority, Status } from '../types/ticket'
 
 const categoryColors: Record<Category, string> = {
   distribution: '#00BCD4',
@@ -13,28 +14,47 @@ const categoryColors: Record<Category, string> = {
   account:      '#E040FB',
 }
 
-const priorityOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
+const categoryLabels: Record<Category, string> = {
+  distribution: 'Distribution',
+  royalties:    'Royalties',
+  metadata:     'Métadonnées',
+  account:      'Compte',
+}
+
+const priorityOrder: Record<Priority, number> = { critical: 0, high: 1, medium: 2, low: 3 }
+const statusOrder:   Record<Status, number>   = { in_progress: 0, pending: 1, resolved: 2, closed: 3 }
+
+type SortMode = 'priority' | 'date_desc' | 'status'
 
 function getArtistById(artistId: string) {
   return mockUsers.find((u) => u.id === artistId)
 }
 
-function getAgentName(agentId?: string): string {
-  if (!agentId) return '—'
-  return mockUsers.find((u) => u.id === agentId)?.name || agentId
-}
-
 export default function AgentDashboard() {
   const navigate = useNavigate()
-  const { tickets, currentUser } = useTicketStore()
+  const { tickets, currentUser, readTickets, markRead } = useTicketStore()
+  const [sortMode, setSortMode] = useState<SortMode>('priority')
 
-  const openTickets    = tickets.filter((t) => t.status !== 'closed')
+  const openTickets     = tickets.filter((t) => t.status !== 'closed')
   const criticalTickets = tickets.filter((t) => t.priority === 'critical' && t.status !== 'closed')
-  const assignedToMe   = tickets.filter((t) => t.assignedTo === currentUser?.id && t.status !== 'closed')
+  const assignedToMe    = tickets.filter((t) => t.assignedTo === currentUser?.id && t.status !== 'closed')
 
-  const sortedTickets = [...openTickets].sort(
-    (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
-  )
+  // Real satisfaction
+  const withFeedback = tickets.filter((t) => t.feedback)
+  const avgSat = withFeedback.length > 0
+    ? (withFeedback.reduce((s, t) => s + t.feedback!.rating, 0) / withFeedback.length).toFixed(1)
+    : '4.7'
+
+  const sortedTickets = [...tickets].sort((a, b) => {
+    const aResolved = a.status === 'resolved' || a.status === 'closed' ? 1 : 0
+    const bResolved = b.status === 'resolved' || b.status === 'closed' ? 1 : 0
+    if (aResolved !== bResolved) return aResolved - bResolved
+    switch (sortMode) {
+      case 'date_desc': return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      case 'status':    return statusOrder[a.status] - statusOrder[b.status]
+      default:          return priorityOrder[a.priority] - priorityOrder[b.priority]
+    }
+  })
 
   const categories: Category[] = ['distribution', 'royalties', 'metadata', 'account']
   const categoryBreakdown = categories.map((cat) => ({
@@ -45,14 +65,9 @@ export default function AgentDashboard() {
       : 0,
   }))
 
-  const categoryLabels: Record<Category, string> = {
-    distribution: 'Distribution',
-    royalties:    'Royalties',
-    metadata:     'Métadonnées',
-    account:      'Compte',
-  }
-
   const now = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+
+  const sortLabels: Record<SortMode, string> = { priority: 'Priorité', date_desc: 'Date', status: 'Statut' }
 
   return (
     <div className="min-h-screen bg-bg p-6 animate-fade-in">
@@ -68,173 +83,168 @@ export default function AgentDashboard() {
           label="Tickets ouverts"
           gradient="from-purple to-purple-light"
           iconBg="bg-purple/15"
-          icon={<TicketIcon size={20} className="text-purple" />}
+          icon={<TicketIcon size={20} className="text-purple" aria-hidden="true" />}
+          onClick={() => navigate('/agent/tickets/TK-001')}
         />
         <StatCard
           value={criticalTickets.length}
           label="Critiques"
           gradient="from-red to-orange"
           iconBg="bg-red/15"
-          icon={<AlertTriangle size={20} className="text-red" />}
+          icon={<AlertTriangle size={20} className="text-red" aria-hidden="true" />}
           pulse={criticalTickets.length > 0}
+          onClick={() => criticalTickets[0] && navigate(`/agent/tickets/${criticalTickets[0].id}`)}
         />
         <StatCard
           value={assignedToMe.length}
           label="Assignés à moi"
           gradient="from-teal to-green"
           iconBg="bg-teal/15"
-          icon={<UserCheck size={20} className="text-teal" />}
+          icon={<UserCheck size={20} className="text-teal" aria-hidden="true" />}
+          onClick={() => assignedToMe[0] && navigate(`/agent/tickets/${assignedToMe[0].id}`)}
         />
         <StatCard
-          value="4.7★"
+          value={`${avgSat}★`}
           label="Satisfaction"
           gradient="from-green to-teal"
           iconBg="bg-green/15"
-          icon={<Star size={20} className="text-green" />}
+          icon={<Star size={20} className="text-green" aria-hidden="true" />}
+          onClick={() => navigate('/agent/stats')}
         />
       </div>
 
-      {/* Category breakdown */}
-      <div className="bg-card border border-border rounded-2xl p-5 mb-6 animate-slide-up">
-        <h2 className="text-sm font-semibold text-white mb-4">Répartition par catégorie</h2>
-        <div className="flex flex-col gap-3">
-          {categoryBreakdown.map(({ category, count, pct }) => (
-            <div key={category} className="flex items-center gap-3 mb-3">
-              <span className="text-lgray text-sm w-28 flex-shrink-0">{categoryLabels[category]}</span>
-              <div className="flex-1 bg-dgray rounded-full h-3">
-                <div
-                  className="h-3 rounded-full transition-all duration-500"
-                  style={{ width: `${pct}%`, backgroundColor: categoryColors[category] }}
-                />
-              </div>
-              <span className="text-white text-sm font-medium w-6 text-right flex-shrink-0">{count}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Tickets table */}
-      <div className="bg-card border border-border rounded-2xl overflow-hidden mb-6 animate-slide-up">
-        <div className="bg-surface px-5 py-4 border-b border-border">
-          <h2 className="text-base font-semibold text-white">
-            Tous les tickets actifs
-            <span className="text-xs text-muted ml-2 font-normal">({sortedTickets.length})</span>
-          </h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px]">
-            <thead>
-              <tr className="border-b border-border bg-surface/50">
-                <th className="text-left text-xs font-bold text-muted uppercase tracking-wider px-4 py-3">#</th>
-                <th className="text-left text-xs font-bold text-muted uppercase tracking-wider px-4 py-3">Artiste</th>
-                <th className="text-left text-xs font-bold text-muted uppercase tracking-wider px-4 py-3">Catégorie</th>
-                <th className="text-left text-xs font-bold text-muted uppercase tracking-wider px-4 py-3">Sujet</th>
-                <th className="text-left text-xs font-bold text-muted uppercase tracking-wider px-4 py-3">Priorité</th>
-                <th className="text-left text-xs font-bold text-muted uppercase tracking-wider px-4 py-3">Statut</th>
-                <th className="text-left text-xs font-bold text-muted uppercase tracking-wider px-4 py-3">Assigné à</th>
-                <th className="text-left text-xs font-bold text-muted uppercase tracking-wider px-4 py-3">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedTickets.map((ticket) => {
-                const artist = getArtistById(ticket.artistId)
-                const isCritical = ticket.priority === 'critical'
-                return (
-                  <tr
-                    key={ticket.id}
-                    className={`border-b border-border/40 h-14 ${isCritical ? 'bg-red/5 hover:bg-red/8' : 'hover:bg-white/3'} cursor-pointer`}
-                    onClick={() => navigate(`/agent/tickets/${ticket.id}`)}
-                  >
-                    <td className="px-4 py-3 font-mono text-teal text-xs">{ticket.id}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {artist && (
-                          <div
-                            className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
-                            style={{ backgroundColor: artist.color }}
-                          >
-                            {artist.avatar}
-                          </div>
-                        )}
-                        <span className="text-lgray text-sm">{artist?.name || ticket.artistId}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge category={ticket.category} />
-                    </td>
-                    <td className="px-4 py-3 text-white text-sm max-w-xs">
-                      <span className="line-clamp-1" title={ticket.subject}>{ticket.subject}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge priority={ticket.priority} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge status={ticket.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      {ticket.assignedTo ? (
-                        <span className="text-lgray text-sm">{getAgentName(ticket.assignedTo)}</span>
-                      ) : (
-                        <span className="text-purple text-xs hover:underline cursor-pointer">Assigner</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3" onClick={(e) => { e.stopPropagation(); navigate(`/agent/tickets/${ticket.id}`) }}>
-                      <span className="bg-purple/20 text-purple text-xs px-3 py-1.5 rounded-lg hover:bg-purple/30 cursor-pointer">
-                        Ouvrir →
-                      </span>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Bottom panels */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-slide-up">
-        {/* My assigned tickets */}
-        <div className="bg-card border border-border rounded-2xl overflow-hidden">
-          <div className="bg-surface px-5 py-4 border-b border-border">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 animate-slide-up">
+        {/* Tickets list */}
+        <div className="lg:col-span-2 bg-card border border-dgray rounded-2xl overflow-hidden">
+          <div className="bg-surface px-5 py-4 border-b border-dgray flex items-center justify-between">
             <h2 className="text-base font-semibold text-white">
-              Mes tickets assignés
-              <span className="text-xs text-muted ml-2 font-normal">({assignedToMe.length})</span>
+              Tous les tickets
+              <span className="text-xs text-muted ml-2 font-normal">({sortedTickets.length})</span>
             </h2>
+            {/* Sort */}
+            <div className="flex items-center gap-1 text-xs">
+              <ArrowUpDown size={11} className="text-muted" aria-hidden="true" />
+              {(['priority', 'date_desc', 'status'] as SortMode[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setSortMode(m)}
+                  aria-pressed={sortMode === m}
+                  className={`px-2 py-0.5 rounded cursor-pointer transition-colors duration-100
+                    ${sortMode === m ? 'text-purple font-semibold' : 'text-muted hover:text-lgray'}`}
+                >
+                  {sortLabels[m]}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="p-4 flex flex-col gap-2">
-            {assignedToMe.length === 0 ? (
-              <p className="text-center py-6 text-muted text-sm">Aucun ticket assigné.</p>
-            ) : (
-              assignedToMe.map((ticket) => (
+          <div>
+            {sortedTickets.map((ticket) => {
+              const artist = getArtistById(ticket.artistId)
+              const isCritical = ticket.priority === 'critical'
+              const isResolved = ticket.status === 'resolved' || ticket.status === 'closed'
+              const lastMsg = ticket.messages[ticket.messages.length - 1]
+              const hasUnreadMsg = !!(lastMsg && lastMsg.role === 'artist')
+              const isRead = readTickets.includes(ticket.id)
+              const hasUnread = hasUnreadMsg && !isRead
+              return (
                 <div
                   key={ticket.id}
-                  onClick={() => navigate(`/agent/tickets/${ticket.id}`)}
-                  className="flex items-center gap-3 p-3 bg-dgray/20 rounded-xl hover:bg-dgray/40 cursor-pointer"
+                  onClick={() => { if (hasUnread) markRead(ticket.id); navigate(`/agent/tickets/${ticket.id}`) }}
+                  className={`
+                    flex items-center gap-3 px-4 py-3 border-b border-white/5 cursor-pointer
+                    transition-colors duration-100 border-l-2
+                    ${hasUnread
+                      ? 'border-l-pink bg-pink/5 hover:bg-pink/8'
+                      : isCritical && !isResolved
+                        ? 'border-l-red bg-red/3 hover:bg-red/6'
+                        : isResolved
+                          ? 'border-l-transparent opacity-50 hover:opacity-70 hover:bg-white/3'
+                          : 'border-l-transparent hover:bg-white/3'}
+                  `}
                 >
-                  <span className="font-mono text-teal text-xs w-14">{ticket.id}</span>
-                  <span className="flex-1 text-sm text-white truncate">{ticket.subject}</span>
-                  <Badge priority={ticket.priority} />
+                  {artist && (
+                    <div
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
+                      style={{ backgroundColor: artist.color }}
+                      aria-label={artist.name}
+                    >
+                      {artist.avatar}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-teal text-xs flex-shrink-0">{ticket.id}</span>
+                      <span className={`text-sm truncate ${isResolved ? 'text-muted line-through' : hasUnread ? 'text-white font-medium' : 'text-lgray'}`}>
+                        {ticket.subject}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-muted text-xs">{artist?.name}</span>
+                      <span className="text-muted text-xs">·</span>
+                      <Badge category={ticket.category} variant="inline" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Badge priority={ticket.priority} variant="pill" />
+                    <Badge status={ticket.status} variant="pill" />
+                  </div>
                 </div>
-              ))
-            )}
+              )
+            })}
           </div>
         </div>
 
-        {/* Performance */}
-        <div className="bg-card border border-border rounded-2xl p-5">
-          <h2 className="text-base font-semibold text-white mb-4">Performance</h2>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { label: 'Tickets résolus ce mois', value: '12', color: '#00E676' },
-              { label: 'Temps de réponse moyen',  value: '2.4h', color: '#00BCD4' },
-              { label: 'Taux de résolution',       value: '89%', color: '#7B5EA7' },
-              { label: 'Score satisfaction',        value: '4.7/5', color: '#E040FB' },
-            ].map((stat) => (
-              <div key={stat.label} className="bg-dgray/30 rounded-xl p-3 border border-border">
-                <div className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</div>
-                <div className="text-xs text-muted mt-1">{stat.label}</div>
-              </div>
-            ))}
+        {/* Right column */}
+        <div className="flex flex-col gap-4">
+          {/* Category breakdown */}
+          <div className="bg-card border border-dgray rounded-2xl p-5">
+            <h2 className="text-sm font-semibold text-white mb-4">Par catégorie</h2>
+            <div className="flex flex-col gap-3">
+              {categoryBreakdown.map(({ category, count, pct }) => (
+                <div key={category}>
+                  <div className="flex justify-between mb-1.5">
+                    <span className="text-lgray text-xs">{categoryLabels[category]}</span>
+                    <span className="text-white text-xs font-medium">{count}</span>
+                  </div>
+                  <div className="bg-dgray rounded-full h-2.5">
+                    <div
+                      className="h-2.5 rounded-full transition-all duration-500"
+                      style={{ width: `${pct}%`, backgroundColor: categoryColors[category] }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* My assigned tickets */}
+          <div className="bg-card border border-dgray rounded-2xl overflow-hidden flex-1">
+            <div className="bg-surface px-4 py-3 border-b border-dgray">
+              <h2 className="text-sm font-semibold text-white">
+                Assignés à moi
+                <span className="text-xs text-muted ml-2 font-normal">({assignedToMe.length})</span>
+              </h2>
+            </div>
+            <div className="p-3 flex flex-col gap-1">
+              {assignedToMe.length === 0 ? (
+                <p className="text-center py-5 text-muted text-xs">Aucun ticket assigné.</p>
+              ) : (
+                assignedToMe.map((ticket) => (
+                  <div
+                    key={ticket.id}
+                    onClick={() => navigate(`/agent/tickets/${ticket.id}`)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 cursor-pointer group"
+                  >
+                    <span className="font-mono text-teal text-xs w-14 flex-shrink-0">{ticket.id}</span>
+                    <span className="flex-1 text-sm text-lgray truncate">{ticket.subject}</span>
+                    <Badge priority={ticket.priority} variant="pill" />
+                    <span className="text-purple text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-100 flex-shrink-0">
+                      Ouvrir →
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>

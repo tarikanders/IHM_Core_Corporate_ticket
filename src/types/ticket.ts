@@ -9,6 +9,12 @@ export interface Message {
   createdAt: string
 }
 
+export interface Feedback {
+  rating: number       // 1–5
+  comment: string
+  submittedAt: string
+}
+
 export interface Ticket {
   id: string
   subject: string
@@ -22,6 +28,7 @@ export interface Ticket {
   messages: Message[]
   assignedTo?: string
   tags: string[]
+  feedback?: Feedback
 }
 
 export interface User {
@@ -32,6 +39,7 @@ export interface User {
   city: string
   avatar: string
   color: string
+  balance?: number
 }
 
 export interface Release {

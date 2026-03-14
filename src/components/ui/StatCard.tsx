@@ -10,6 +10,7 @@ interface StatCardProps {
   trendColor?: string
   pulse?: boolean
   className?: string
+  onClick?: () => void
 }
 
 export default function StatCard({
@@ -22,9 +23,13 @@ export default function StatCard({
   trendColor = 'text-green',
   pulse = false,
   className = '',
+  onClick,
 }: StatCardProps) {
   return (
-    <div className={`group bg-card border border-border rounded-2xl overflow-hidden hover:border-purple/30 transition-all cursor-default ${className}`}>
+    <div
+      onClick={onClick}
+      className={`group bg-card border border-border rounded-2xl overflow-hidden hover:border-purple/30 transition-all ${onClick ? 'cursor-pointer hover:shadow-[0_0_16px_rgba(123,94,167,0.2)] active:scale-[0.98]' : 'cursor-default'} ${className}`}
+    >
       <div className={`h-1.5 w-full bg-gradient-to-r ${gradient}`} />
       <div className="p-5">
         <div className="flex items-start justify-between">
