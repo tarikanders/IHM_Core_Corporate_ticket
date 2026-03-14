@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Ticket, Status, Priority, Message, User } from '../types/ticket'
+import type { Ticket, Status, Priority, Message, User, Feedback } from '../types/ticket'
 import { mockTickets } from '../data/mockTickets'
 import { mockUsers } from '../data/mockUsers'
 
@@ -17,6 +17,7 @@ interface TicketStore {
   assignTicket: (id: string, agentId: string) => void
   addTag: (id: string, tag: string) => void
   removeTag: (id: string, tag: string) => void
+  submitFeedback: (id: string, feedback: Omit<Feedback, 'submittedAt'>) => void
 }
 
 export const useTicketStore = create<TicketStore>()(
@@ -105,6 +106,16 @@ export const useTicketStore = create<TicketStore>()(
           tickets: state.tickets.map((t) =>
             t.id === id
               ? { ...t, tags: t.tags.filter((tg) => tg !== tag), updatedAt: new Date().toISOString() }
+              : t
+          ),
+        }))
+      },
+
+      submitFeedback: (id, { rating, comment }) => {
+        set((state) => ({
+          tickets: state.tickets.map((t) =>
+            t.id === id
+              ? { ...t, feedback: { rating, comment, submittedAt: new Date().toISOString() }, updatedAt: new Date().toISOString() }
               : t
           ),
         }))

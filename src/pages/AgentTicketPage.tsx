@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Send, X, Lock, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Send, X, Lock, CheckCircle, Clock } from 'lucide-react'
 import { useTicketStore } from '../store/useTicketStore'
 import { mockUsers } from '../data/mockUsers'
 import { mockReleases } from '../data/mockReleases'
@@ -29,6 +29,31 @@ const priorities: { value: Priority; label: string; activeBg: string }[] = [
 ]
 
 
+const SLA_HOURS: Record<string, number> = {
+  critical: 4,
+  high: 24,
+  medium: 72,
+  low: 168,
+}
+
+function useSLA(createdAt: string, priority: string) {
+  const slaH = SLA_HOURS[priority] ?? 24
+  const elapsedMs = Date.now() - new Date(createdAt).getTime()
+  const elapsedH = elapsedMs / 3_600_000
+  const pct = Math.min(Math.round((elapsedH / slaH) * 100), 100)
+  const remaining = slaH - elapsedH
+  const breached = remaining <= 0
+
+  const fmt = (h: number) => {
+    const abs = Math.abs(h)
+    if (abs < 1) return `${Math.round(abs * 60)} min`
+    if (abs < 48) return `${Math.round(abs)} h`
+    return `${Math.round(abs / 24)} j`
+  }
+
+  return { pct, breached, label: breached ? `Dépassé de ${fmt(-remaining)}` : `${fmt(remaining)} restantes` }
+}
+
 const agentTagOptions = ['deezer', 'spotify', 'urgent', 'royalties', 'metadata', 'distribution', 'account', 'isrc', 'upc']
 
 const cannedResponses = [
@@ -36,6 +61,40 @@ const cannedResponses = [
   'Le problème a été identifié et est en cours de résolution. Vous serez notifié.',
   'Votre ticket a été résolu. N\'hésitez pas à nous contacter si le problème persiste.',
 ]
+
+function SLABlock({ createdAt, priority, status }: { createdAt: string; priority: string; status: string }) {
+  const { pct, breached, label } = useSLA(createdAt, priority)
+  const done = status === 'resolved' || status === 'closed'
+  const color = done ? '#9090A8' : breached ? '#FF1744' : pct >= 80 ? '#FF6D00' : '#00E676'
+
+  return (
+    <div>
+      <p className="text-xs text-muted mb-2 flex items-center gap-1.5">
+        <Clock size={11} />
+        SLA
+      </p>
+      <div className="bg-dgray rounded-xl p-3 border border-border">
+        <div className="flex justify-between items-center mb-2 text-xs">
+          <span className="text-lgray">Délai {SLA_HOURS[priority]}h</span>
+          <span style={{ color }} className="font-semibold">
+            {done ? 'Clôturé' : label}
+          </span>
+        </div>
+        <div className="bg-bg rounded-full h-2 overflow-hidden">
+          <div
+            className="h-2 rounded-full transition-all duration-500"
+            style={{ width: `${done ? 100 : pct}%`, backgroundColor: color }}
+          />
+        </div>
+        {!done && (
+          <p className="text-muted text-xs mt-2">
+            {breached ? '⚠ Délai dépassé' : `${pct}% du délai écoulé`}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function AgentTicketPage() {
   const navigate = useNavigate()
@@ -265,6 +324,9 @@ export default function AgentTicketPage() {
 
         {/* Col 3: Controls */}
         <div className="w-[26%] min-w-48 overflow-y-auto bg-surface p-4 flex flex-col gap-5">
+
+          {/* SLA */}
+          <SLABlock createdAt={ticket.createdAt} priority={ticket.priority} status={ticket.status} />
 
           {/* Status */}
           <div>
